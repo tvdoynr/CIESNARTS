@@ -39,6 +39,16 @@ class Course(models.Model):
     def __str__(self):
         return self.CourseID
 
+    def save(self, *args, **kwargs):
+        creating_new_course = self.pk is None
+        super(Course, self).save(*args, **kwargs)
+
+        if creating_new_course:
+            # Create three sections for the new course
+            for i in range(1, 4):
+                section = Section(course=self, NumberOfStudents=0, Classroom="")
+                section.save()
+
 
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='sections')

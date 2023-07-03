@@ -1,7 +1,9 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 
-from accounts.models import Course, Semester, Profile
+from accounts.models import Course, Semester, Profile, Section
 
 
 class ChangePasswordForm(forms.Form):
@@ -27,10 +29,47 @@ class ChangeEmailForm(forms.Form):
     confirm_password = forms.CharField(max_length=16, widget=forms.PasswordInput)
 
 
+class CreateUserForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    id = forms.CharField(
+        max_length=10,
+        validators=[
+            RegexValidator(
+                regex='^[0-9]*$',
+                message='Username must be Numeric',
+                code='invalid_username'
+            ),
+        ]
+    )
+    email = forms.EmailField(
+        error_messages={
+            'invalid': 'The email format is invalid.',
+        }
+    )
+    user_type = forms.ChoiceField(
+        choices=Profile.USER_TYPE_CHOICES
+    )
+
+
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['CourseID', 'CourseName', 'Description', 'CourseCredit', 'semester']
+
+
+class SectionForm(forms.ModelForm):
+    class Meta:
+        model = Section
+        fields = ['Classroom', 'Instructors']
+        labels = {
+            'Classroom': 'Classroom:',
+            'Instructors': 'Instructors:',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['Instructors'].queryset = User.objects.filter(profile__user_type='instructor')
 
 
 class DateInput(forms.DateInput):
@@ -45,3 +84,26 @@ class SemesterForm(forms.ModelForm):
             'start_date': DateInput(),
             'finish_date': DateInput(),
         }
+
+
+'''class CreateUserForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    id = forms.CharField(
+        max_length=10,
+        validators=[
+            RegexValidator(
+                regex='^[0-9]*$',
+                message='Username must be Numeric',
+                code='invalid_username'
+            ),
+        ]
+    )
+    email = forms.EmailField(
+        error_messages={
+            'invalid': 'The email format is invalid.',
+        }
+    )
+    user_type = forms.ChoiceField(
+        choices=Profile.USER_TYPE_CHOICES
+    )'''

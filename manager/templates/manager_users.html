@@ -1,0 +1,50 @@
+{% extends 'manager_base.html' %}
+
+{% block content %}
+  <h2>Add a new User</h2>
+  <form method="post">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    <div class="fieldWrapper">
+      {{ form.first_name.errors }}
+      <label for="{{ form.first_name.id_for_label }}">First Name:</label>
+      {{ form.first_name }}
+    </div>
+
+    <div class="fieldWrapper">
+      {{ form.last_name.errors }}
+      <label for="{{ form.last_name.id_for_label }}">Last Name:</label>
+      {{ form.last_name }}
+    </div>
+
+    <div class="fieldWrapper">
+      {{ form.id.errors }}
+      <label for="{{ form.id.id_for_label }}">Id:</label>
+      {{ form.id }}
+    </div>
+
+    <div class="fieldWrapper">
+      {{ form.email.errors }}
+      <label for="{{ form.email.id_for_label }}">Email:</label>
+      {{ form.email }}
+    </div>
+
+    <div class="fieldWrapper">
+      {{ form.user_type.errors }}
+      <label for="{{ form.user_type.id_for_label }}">User Role:</label>
+      {{ form.user_type }}
+    </div>
+
+    <button type="submit">Add User</button>
+  </form>
+
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

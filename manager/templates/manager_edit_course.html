@@ -1,0 +1,39 @@
+{% extends 'manager_base.html' %}
+
+{% block content %}
+  <div class="container">
+    <h2>Edit Course</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ section_formset.management_form }}
+
+      <div class="row">
+        {% for form in section_formset %}
+          <div class="col-md-2">
+            <div class="form-group">
+
+                <div class="fieldWrapper">
+                    {{ form.Classroom.errors }}
+                    <label for="{{ form.Classroom.id_for_label }}">Classroom :</label>
+                    {{ form.Classroom }}
+                </div>
+
+                <div class="fieldWrapper">
+                    {{ form.Instructors.errors }}
+                    <label for="{{ form.Instructors.id_for_label }}">Instructors :</label>
+                    {{ form.Instructors }}
+                </div>
+
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock %}
