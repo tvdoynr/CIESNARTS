@@ -1,8 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.views import View
+
+from accounts.models import Course
 from .forms import ChangeEmailForm, ChangePasswordForm
 
 
@@ -61,3 +64,22 @@ class StudentAccountView(LoginRequiredMixin, View):
             email_form = ChangeEmailForm()
 
         return render(request, "student_account.html", {"password_form": password_form, 'email_form': email_form})
+
+
+class StudentCourseView(View):
+    def get(self, request):
+        active_courses = Course.objects.filter(is_active=True)
+
+        paginator = Paginator(active_courses, 5)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        return render(request, 'student_courses.html', {'page_obj': page_obj})
+
+
+class StudentTakeCourseView(View):
+    def get(self, request, course_id):
+        course = Course.objects.get(pk=course_id)
+        sections = course.sections.all()
+
+        

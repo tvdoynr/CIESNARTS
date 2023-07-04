@@ -10,20 +10,25 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
+
                 <li class="nav-item {% if request.resolver_match.view_name == 'ManagerPage' %}active{% endif %}">
                     <a class="nav-link" href="{% url 'ManagerPage' %}">Dashboard</a>
                 </li>
-                <li class="nav-item {% if request.resolver_match.view_name == 'ManagerAccountPage' %}active{% endif %}">
-                    <a class="nav-link" href="{% url 'ManagerAccountPage' %}">Account</a>
-                </li>
+
                 <li class="nav-item {% if request.resolver_match.view_name == 'CreateCoursePage' %}active{% endif %}">
                     <a class="nav-link" href="{% url 'CreateCoursePage' %}">Courses</a>
                 </li>
+
                 <li class="nav-item {% if request.resolver_match.view_name == 'CreateSemesterPage' %}active{% endif %}">
                     <a class="nav-link" href="{% url 'CreateSemesterPage' %}">Semester</a>
                 </li>
+
                 <li class="nav-item {% if request.resolver_match.view_name == 'AddUserPage' %}active{% endif %}">
                     <a class="nav-link" href="{% url 'AddUserPage' %}">Users</a>
+                </li>
+
+                <li class="nav-item {% if request.resolver_match.view_name == 'ManagerAccountPage' %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'ManagerAccountPage' %}">Account</a>
                 </li>
 
             </ul>

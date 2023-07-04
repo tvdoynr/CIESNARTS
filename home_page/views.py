@@ -65,7 +65,8 @@ class RegistrationView(View):
                                                 password=password,
                                                 email=email,
                                                 first_name=first_name,
-                                                last_name=last_name)
+                                                last_name=last_name,
+                                                is_active=False)
 
                 Profile.objects.create(user=user, user_type='student')
 

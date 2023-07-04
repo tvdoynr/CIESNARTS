@@ -32,6 +32,7 @@ class Course(models.Model):
     Description = models.TextField()
     CourseCredit = models.IntegerField()
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, null=True)
+    is_active = models.BooleanField(default=False)
 
     def can_be_created(self):
         return self.semester.has_started()
