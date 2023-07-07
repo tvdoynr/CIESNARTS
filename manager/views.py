@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -8,17 +9,20 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.crypto import get_random_string
+from django.utils.decorators import method_decorator
 from django.views import View
 from .forms import ChangeEmailForm, ChangePasswordForm, CourseForm, SemesterForm, CreateUserForm, SectionForm
 from accounts.models import Course, Profile, Section
 
 
+@method_decorator(login_required, name="dispatch")
 class ManagerView(View):
     def get(self, request):
         return render(request, "manager_dashboard.html")
 
 
-class ManagerAccountView(LoginRequiredMixin, View):
+@method_decorator(login_required, name="dispatch")
+class ManagerAccountView(View):
     def get(self, request):
         password_form = ChangePasswordForm()
         email_form = ChangeEmailForm()
@@ -69,6 +73,7 @@ class ManagerAccountView(LoginRequiredMixin, View):
                                                         'email_form': email_form})
 
 
+@method_decorator(login_required, name="dispatch")
 class CourseCreateView(View):
     def get(self, request, *args, **kwargs):
         course_create_form = CourseForm()
@@ -90,14 +95,14 @@ class CourseCreateView(View):
                 return redirect(reverse('CreateCoursePage'))
             else:
                 messages.error(request, 'The semester has either not started or has already ended.')
-        else:
-            courses = Course.objects.all()
-            paginator = Paginator(courses, 5)
-            page_number = request.GET.get('page')
-            page_obj = paginator.get_page(page_number)
-            return render(request, 'manager_courses.html', {'form': course_create_form, 'page_obj': page_obj})
+        courses = Course.objects.all()
+        paginator = Paginator(courses, 5)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return render(request, 'manager_courses.html', {'form': course_create_form, 'page_obj': page_obj})
 
 
+@method_decorator(login_required, name="dispatch")
 class AddUserView(View):
     def get(self, request):
         add_user_form = CreateUserForm()
@@ -178,6 +183,7 @@ class AddUserView(View):
         return render(request, 'manager_users.html', {'form': add_user_form, 'page_obj': page_obj})
 
 
+@method_decorator(login_required, name="dispatch")
 class SemesterCreateView(View):
     def get(self, request):
         form = SemesterForm()
@@ -194,6 +200,7 @@ class SemesterCreateView(View):
         return render(request, 'manager_semester.html', {'form': form})
 
 
+@method_decorator(login_required, name="dispatch")
 class CourseEditView(View):
     template_name = 'manager_edit_course.html'
     SectionFormSet = formset_factory(SectionForm, extra=0)
@@ -204,7 +211,7 @@ class CourseEditView(View):
         sections = course.sections.all()
 
         initial_data_classroom = [{'classroom': section.Classroom or None} for section in sections]
-        initial_data_instructors = [{'instructor': section.Instructors.all() or None} for section in sections]
+        initial_data_instructors = [{'instructor': section.Instructor or None} for section in sections]
 
         section_formset = self.section_formset_class(initial=initial_data_classroom)
 
@@ -212,13 +219,13 @@ class CourseEditView(View):
             classroom = initial_data_classroom[i]['classroom']
             form.initial['Classroom'] = classroom
             instructors = initial_data_instructors[i]['instructor']
-            form.initial['Instructors'] = instructors
+            form.initial['Instructor'] = instructors
 
         context = {
             'sections': sections,
             'section_formset': section_formset,
         }
-        
+
         return render(request, self.template_name, context)
 
     def post(self, request, course_id):
@@ -227,12 +234,15 @@ class CourseEditView(View):
         section_formset = self.section_formset_class(request.POST)
         if section_formset.is_valid():
             for i, form in enumerate(section_formset):
-                section = sections[i]  # Convert the index to an integer
-                classroom = form.cleaned_data.get('Classroom')  # Update the field name
-                instructors = form.cleaned_data.get('Instructors')  # Update the field name
+                section = sections[i]
+                classroom = form.cleaned_data.get('Classroom')
+                instructor = form.cleaned_data.get('Instructor')
                 section.Classroom = classroom
-                section.Instructors.set(instructors)
+                section.Instructor = instructor
                 section.save()
+                print(classroom)
+                print(instructor)
+                print(i, "\n")
             course.is_active = True
             course.save()
             return redirect(reverse('CreateCoursePage'))

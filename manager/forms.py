@@ -61,15 +61,11 @@ class CourseForm(forms.ModelForm):
 class SectionForm(forms.ModelForm):
     class Meta:
         model = Section
-        fields = ['Classroom', 'Instructors']
-        labels = {
-            'Classroom': 'Classroom:',
-            'Instructors': 'Instructors:',
-        }
+        fields = ['Classroom', 'Instructor']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['Instructors'].queryset = User.objects.filter(profile__user_type='instructor')
+        self.fields['Instructor'].queryset = User.objects.filter(profile__user_type='instructor')
 
 
 class DateInput(forms.DateInput):

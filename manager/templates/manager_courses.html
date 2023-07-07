@@ -58,7 +58,7 @@
                   <li>
                     <label>
                       {{ course.CourseID }} - {{ course.CourseName }}
-                      <input type="checkbox" name="selected_courses" value="{{ course.pk }}">
+                      <input type="radio" name="selected_courses" value="{{ course.pk }}">
                     </label>
                   </li>
                   <br>
@@ -67,29 +67,27 @@
                 {% endfor %}
               </ul>
 
-              <button id="edit-button" class="btn btn-sm btn-primary" disabled>Edit Selected Course</button>
+              <button type="submit" id="edit-button" name="edit_course" class="btn btn-sm btn-primary" disabled>Edit Selected Course</button>
 
               <script>
-                const checkboxes = document.querySelectorAll('input[name="selected_courses"]');
-                const editButton = document.getElementById('edit-button');
+                  const radios = document.querySelectorAll('input[name="selected_courses"]');
+                  const editButton = document.getElementById('edit-button');
 
-                checkboxes.forEach((checkbox) => {
-                  checkbox.addEventListener('change', () => {
-                    const anyCheckboxChecked = [...checkboxes].some((checkbox) => checkbox.checked);
-                    editButton.disabled = !anyCheckboxChecked;
+                  radios.forEach((radio) => {
+                    radio.addEventListener('change', () => {
+                      const anyRadioChecked = [...radios].some((radio) => radio.checked);
+                      editButton.disabled = !anyRadioChecked;
+                    });
                   });
-                });
 
-                editButton.addEventListener('click', () => {
-                  const selectedCourses = [...checkboxes]
-                    .filter((checkbox) => checkbox.checked)
-                    .map((checkbox) => checkbox.value);
+                  editButton.addEventListener('click', () => {
+                    const selectedCourses = [...radios].find((radio) => radio.checked).value;
 
-                  // Redirect to the edit view with the selected course(s) IDs
-                  const editURL = `/manager/course/${selectedCourses.join(',')}/edit/`;
-                  window.location.href = editURL;
-                });
-              </script>
+                    const editURL = `/manager/course/${selectedCourses}/edit/`;
+                    window.location.href = editURL;
+                  });
+                </script>
+
 
             <br>
             <br>

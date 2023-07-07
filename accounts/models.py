@@ -34,6 +34,9 @@ class Course(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=False)
 
+    def is_student_enrolled(self, student):
+        return self.sections.filter(students=student).exists()
+
     def can_be_created(self):
         return self.semester.has_started()
 
@@ -55,7 +58,8 @@ class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='sections')
     NumberOfStudents = models.IntegerField()
     Classroom = models.CharField(max_length=100)
-    Instructors = models.ManyToManyField(User)
+    Instructor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    students = models.ManyToManyField(Profile, related_name='enrolled_sections')
 
     def can_be_added(self):
         return self.NumberOfStudents < 40

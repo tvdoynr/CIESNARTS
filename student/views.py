@@ -1,22 +1,28 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views import View
 
-from accounts.models import Course
+from accounts.models import Course, Section, Profile
 from .forms import ChangeEmailForm, ChangePasswordForm
 
 
-class StudentView(LoginRequiredMixin, View):
+@method_decorator(login_required, name="dispatch")
+class StudentView(View):
     def get(self, request):
         print("za")
 
         return render(request, "student_dashboard.html")
 
 
-class StudentAccountView(LoginRequiredMixin, View):
+@method_decorator(login_required, name="dispatch")
+class StudentAccountView(View):
     def get(self, request):
         password_form = ChangePasswordForm()
         email_form = ChangeEmailForm()
@@ -66,20 +72,61 @@ class StudentAccountView(LoginRequiredMixin, View):
         return render(request, "student_account.html", {"password_form": password_form, 'email_form': email_form})
 
 
+@method_decorator(login_required, name="dispatch")
 class StudentCourseView(View):
     def get(self, request):
+        student = Profile.objects.get(user=request.user)
         active_courses = Course.objects.filter(is_active=True)
+        enrolled_courses = Course.objects.filter(sections__students=student)
 
-        paginator = Paginator(active_courses, 5)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
+        active_courses = [course for course in active_courses if not course.is_student_enrolled(student)]
 
-        return render(request, 'student_courses.html', {'page_obj': page_obj})
+        paginator_enrolled_page = Paginator(enrolled_courses, 5)
+        paginator_can_enroll_course = Paginator(active_courses, 5)
+
+        enrolled_page_number = request.GET.get('enrolled_page')
+        can_enroll_page_number = request.GET.get('can_enroll_page')
+
+        enrolled_page_obj = paginator_enrolled_page.get_page(enrolled_page_number)
+        can_enroll_page_obj = paginator_can_enroll_course.get_page(can_enroll_page_number)
+
+        context = {
+            'can_enroll_page_obj': can_enroll_page_obj,
+            'enrolled_page_obj': enrolled_page_obj,
+        }
+        return render(request, 'student_courses.html', context)
 
 
+@method_decorator(login_required, name="dispatch")
 class StudentTakeCourseView(View):
     def get(self, request, course_id):
         course = Course.objects.get(pk=course_id)
         sections = course.sections.all()
 
-        
+        context = {
+            'course': course,
+            'sections': sections,
+        }
+
+        return render(request, "student_enroll_course.html", context)
+
+    def post(self, request, course_id):
+        section_id = request.POST.get('section_id')
+        section = Section.objects.get(pk=section_id)
+        if section.can_be_added():
+            student = Profile.objects.get(user_id=request.user.id)
+            section.students.add(student)
+            section.NumberOfStudents += 1
+            section.save()
+
+            return redirect(reverse('StudentCoursePage'))
+
+        course = Course.objects.get(pk=course_id)
+        sections = course.sections.all()
+
+        context = {
+            'course': course,
+            'sections': sections,
+        }
+        messages.success(request, "Section is full already!")
+        return render(request, "student_enroll_course.html", context)

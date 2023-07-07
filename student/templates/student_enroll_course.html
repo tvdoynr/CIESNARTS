@@ -1,0 +1,65 @@
+{% extends 'student_base.html' %}
+
+{% block content %}
+    <div class="row">
+    <h1> General Informations for Student</h1>
+        <li class="list-group-item">
+            <label>
+                Course Code: {{ course.CourseID }}
+            </label>
+            <br>
+            <label>
+                Course Name: {{ course.CourseName }}
+            </label>
+            <label>
+                Course Description: {{ course.Description }}
+            </label>
+            <label>
+                Course Credit: {{ course.CourseCredit }}
+            </label>
+        </li>
+    </div>
+    <br><br>
+    <div class="row">
+        <h3> Sections </h3>
+        <ul>
+            <div class="row">
+                {% for section in sections %}
+                    <div class="col-md-4">
+                        <form method="post" action="{% url 'StudentTakeCoursePage' course_id=course.id %}"
+                         onsubmit="return confirm('Are you sure you want to take this section?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="section_id" value="{{ section.id }}">
+                            <button type="submit" class="list-group-item list-group-item-action" id="section-{{ section.id }}">
+                                <label>
+                                    Number of the students :{{ section.NumberOfStudents}}
+                                </label>
+                                <label>
+                                    Classroom :{{ section.Classroom}}
+                                </label>
+                                <label>
+                                    Instructor :{{ section.Instructor.first_name}} {{ section.Instructor.last_name}}
+                                </label>
+                            </button>
+                        </form>
+                    </div>
+                {% empty %}
+                <li> There is no section</li>
+                {% endfor %}
+            </div>
+        </ul>
+    </div>
+    <div class="row">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    </div>
+
+    <script>
+
+    </script>
+{% endblock %}

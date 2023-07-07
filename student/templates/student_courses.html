@@ -6,11 +6,11 @@
 
           <h3>Active Courses</h3>
                   <ul>
-                    {% for course in page_obj %}
+                    {% for can_enroll_course in can_enroll_page_obj %}
                       <li>
                         <label>
-                          {{ course.CourseID }}  {{ course.CourseName }}  {{ course.CourseCredit}}
-                          <input type="checkbox" name="selected_students" value="{{ course.pk }}">
+                          {{ can_enroll_course.CourseID }}  {{ can_enroll_course.CourseName }}  {{ can_enroll_course.CourseCredit}}
+                            <input type="radio" name="can_enroll_course" value="{{ can_enroll_course.pk }}">
                         </label>
                       </li>
                       <br>
@@ -19,52 +19,110 @@
                     {% endfor %}
                   </ul>
 
-                  <button type="submit" id="enroll-button" name="enroll" class="btn btn-sm btn-primary" disabled>Enroll</button>
+                  <button type="submit" id="can-enroll-button" name="piazza" class="btn btn-sm btn-primary" disabled>Enroll</button>
 
               <script>
-                const checkboxes = document.querySelectorAll('input[name="selected_students"]');
-                const enrollButton = document.getElementById('enroll-button');
+                    const can_enroll_radio = document.querySelectorAll('input[name="can_enroll_course"]');
+                    const can_enroll_button = document.getElementById('can-enroll-button');
 
-                checkboxes.forEach((checkbox) => {
-                  checkbox.addEventListener('change', () => {
-                    const anyCheckboxChecked = [...checkboxes].some((checkbox) => checkbox.checked);
-                    enrollButton.disabled = !anyCheckboxChecked;
-                  });
-                });
+                    can_enroll_radio.forEach((radio) => {
+                        radio.addEventListener('change', () => {
+                            const anyRadioChecked = [...can_enroll_radio].some((radio) => radio.checked);
+                            can_enroll_button.disabled = !anyRadioChecked;
+                        });
+                    });
 
-                enrollButton.addEventListener('click', () => {
-                  const selectedCourses = [...checkboxes]
-                    .filter((checkbox) => checkbox.checked)
-                    .map((checkbox) => checkbox.value);
+                    can_enroll_button.addEventListener('click', () => {
+                        const can_enroll_course = [...can_enroll_radio].find((radio) => radio.checked).value;
 
-                  // Redirect to the edit view with the selected course(s) IDs
-                  const editURL = `/student/course/${selectedCourses.join(',')}/enroll/`;
-                  window.location.href = editURL;
-                });
-              </script>
+                        const can_enrollURL = `/student/course/${can_enroll_course}/enroll/`;
+                        window.location.href = can_enrollURL;
+                    });
+            </script>
 
             <br>
             <br>
             <nav aria-label="Page navigation">
               <ul class="pagination">
-                {% if page_obj.has_previous %}
+                {% if can_enroll_page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?page={{ can_enroll_page_obj.previous_page_number }}">Previous</a>
                   </li>
                 {% endif %}
-                {% for i in page_obj.paginator.page_range %}
-                  <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                {% for i in can_enroll_page_obj.paginator.page_range %}
+                  <li class="page-item {% if can_enroll_page_obj.number == i %}active{% endif %}">
                     <a class="page-link" href="?page={{ i }}">{{ i }}</a>
                   </li>
                 {% endfor %}
-                {% if page_obj.has_next %}
+                {% if can_enroll_page_obj.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?page={{ can_enroll_page_obj.next_page_number }}">Next</a>
                   </li>
                 {% endif %}
               </ul>
             </nav>
 
-      </div>
+        </div>
+
+        <div class="col-md-6">
+            <h3> Enrolled Courses </h3>
+            <ul>
+
+                {% for enrolled_course in enrolled_page_obj %}
+                    <li>
+                        <label>
+                            {{ enrolled_course.CourseID }}  {{ enrolled_course.CourseName }}  {{ enrolled_course.CourseCredit}}
+                            <input type="radio" name="enrolled_course" value="{{ enrolled_course.pk }}">
+                        </label>
+                      </li>
+                {% empty %}
+                    <li>There is no course.</li>
+                {% endfor %}
+
+                </ul>
+
+                <button type="submit" id="enrolled-button" name="enroll" class="btn btn-sm btn-primary" disabled>Enroll</button>
+
+                <script>
+                    const enrolled_radio = document.querySelectorAll('input[name="enrolled_course"]');
+                    const enrolled_button = document.getElementById('enrolled-button');
+
+                    enrolled_radio.forEach((radio) => {
+                        radio.addEventListener('change', () => {
+                            const anyRadioChecked = [...enrolled_radio].some((radio) => radio.checked);
+                            enrolled_button.disabled = !anyRadioChecked;
+                        });
+                    });
+
+                    enrolled_button.addEventListener('click', () => {
+                        const enrolled_course = [...enrolled_radio].find((radio) => radio.checked).value;
+
+                        const enrolled_URL = `/student/course/${enrolled_course}/enroll/`;
+                        window.location.href = enrolled_URL;
+                    });
+            </script>
+
+            <br>
+            <br>
+            <nav aria-label="Page navigation">
+              <ul class="pagination">
+                {% if enrolled_page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ enrolled_page_obj.previous_page_number }}">Previous</a>
+                  </li>
+                {% endif %}
+                {% for i in enrolled_page_obj.paginator.page_range %}
+                  <li class="page-item {% if enrolled_page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                  </li>
+                {% endfor %}
+                {% if enrolled_page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ enrolled_page_obj.next_page_number }}">Next</a>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+        </div>
     </div>
 {% endblock %}
