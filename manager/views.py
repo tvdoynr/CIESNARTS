@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
@@ -77,7 +76,7 @@ class ManagerAccountView(View):
 class CourseCreateView(View):
     def get(self, request, *args, **kwargs):
         course_create_form = CourseForm()
-        courses = Course.objects.all()
+        courses = Course.objects.all().order_by("CourseID")
 
         paginator = Paginator(courses, 5)
         page_number = request.GET.get('page')
@@ -95,7 +94,8 @@ class CourseCreateView(View):
                 return redirect(reverse('CreateCoursePage'))
             else:
                 messages.error(request, 'The semester has either not started or has already ended.')
-        courses = Course.objects.all()
+
+        courses = Course.objects.all().order_by("CourseID")
         paginator = Paginator(courses, 5)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -106,7 +106,7 @@ class CourseCreateView(View):
 class AddUserView(View):
     def get(self, request):
         add_user_form = CreateUserForm()
-        in_active_students = User.objects.filter(is_active=False)
+        in_active_students = User.objects.filter(is_active=False).order_by('id')
 
         paginator = Paginator(in_active_students, 5)
         page_number = request.GET.get('page')
@@ -145,7 +145,7 @@ class AddUserView(View):
 
                 return redirect(reverse("AddUserPage"))
             else:
-                in_active_students = User.objects.filter(is_active=False)
+                in_active_students = User.objects.filter(is_active=False).order_by('id')
 
                 paginator = Paginator(in_active_students, 5)
                 page_number = request.GET.get('page')
@@ -175,7 +175,7 @@ class AddUserView(View):
         else:
             add_user_form = CreateUserForm()
 
-        in_active_students = User.objects.filter(is_active=False)
+        in_active_students = User.objects.filter(is_active=False).order_by('id')
 
         paginator = Paginator(in_active_students, 5)
         page_number = request.GET.get('page')
@@ -240,9 +240,6 @@ class CourseEditView(View):
                 section.Classroom = classroom
                 section.Instructor = instructor
                 section.save()
-                print(classroom)
-                print(instructor)
-                print(i, "\n")
             course.is_active = True
             course.save()
             return redirect(reverse('CreateCoursePage'))

@@ -1,22 +1,19 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 
-from accounts.models import Course, Section, Profile
+from accounts.models import Course, Section, Profile, Transcript, Grade
 from .forms import ChangeEmailForm, ChangePasswordForm
 
 
 @method_decorator(login_required, name="dispatch")
 class StudentView(View):
     def get(self, request):
-        print("za")
 
         return render(request, "student_dashboard.html")
 
@@ -76,8 +73,8 @@ class StudentAccountView(View):
 class StudentCourseView(View):
     def get(self, request):
         student = Profile.objects.get(user=request.user)
-        active_courses = Course.objects.filter(is_active=True)
-        enrolled_courses = Course.objects.filter(sections__students=student)
+        active_courses = Course.objects.filter(is_active=True).order_by("CourseID")
+        enrolled_courses = Course.objects.filter(sections__students=student).order_by("CourseID")
 
         active_courses = [course for course in active_courses if not course.is_student_enrolled(student)]
 
@@ -130,3 +127,30 @@ class StudentTakeCourseView(View):
         }
         messages.success(request, "Section is full already!")
         return render(request, "student_enroll_course.html", context)
+
+
+@method_decorator(login_required, name="dispatch")
+class StudentTranscriptView(View):
+    def get(self, request):
+        student = Profile.objects.get(user=request.user)
+        grades = Grade.objects.filter(transcript__student=student).order_by("course__CourseID")
+
+        '''letter_grades = ["A1" if grade >= 95
+                         else ("A2" if grade >= 90
+                              else ("A3" if grade >= 85
+                                   else ("B1" if grade >= 80
+                                         else ("B2" if grade >= 75
+                                               else ("B3" if grade >= 70
+                                                     else ("C1" if grade >= 65
+                                                           else ("C2" if grade >= 60
+                                                                 else ("C3" if grade >= 55
+                                                                       else ("D" if grade >= 50
+                                                                             else "F")))))))))
+                         for grade in grades]'''
+
+        context = {
+            'student': student,
+            'grades': grades,
+        }
+
+        return render(request, 'student_transcript.html', context)

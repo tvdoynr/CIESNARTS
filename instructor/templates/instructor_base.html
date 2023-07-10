@@ -6,7 +6,6 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Your navbar goes here -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
@@ -15,8 +14,8 @@
                     <a class="nav-link" href="{% url 'InstructorPage' %}">Dashboard</a>
                 </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Courses</a>
+                <li class="nav-item {% if request.resolver_match.view_name == 'InstructorCoursesPage' %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'InstructorCoursesPage' %}">Courses</a>
                 </li>
 
                 <li class="nav-item {% if request.resolver_match.view_name == 'InstructorAccountPage' %}active{% endif %}">
@@ -27,7 +26,6 @@
         </div>
     </nav>
 
-    <!-- Page-specific content will go here -->
     <div class="container">
         {% block content %}{% endblock %}
     </div>

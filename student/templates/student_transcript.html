@@ -1,0 +1,33 @@
+{% extends 'student_base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h2 class="text-center">Transcript for {{ student.user.first_name }} {{ student.user.last_name }}</h2>
+            <table class="table mt-4">
+                <thead>
+                    <tr>
+                        <th scope="col">Course ID</th>
+                        <th scope="col">Instructor</th>
+                        <th scope="col">Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for grade in grades %}
+                    <tr>
+                        <td>{{ grade.course.CourseID }}</td>
+                        <td>{{ grade.instructor.first_name }} {{ grade.instructor.last_name }}</td>
+                        <td>{{ grade.value }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No grades available.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

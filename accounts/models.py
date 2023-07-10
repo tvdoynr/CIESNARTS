@@ -48,7 +48,6 @@ class Course(models.Model):
         super(Course, self).save(*args, **kwargs)
 
         if creating_new_course:
-            # Create three sections for the new course
             for i in range(1, 4):
                 section = Section(course=self, NumberOfStudents=0, Classroom="")
                 section.save()
@@ -65,4 +64,26 @@ class Section(models.Model):
         return self.NumberOfStudents < 40
 
     def __str__(self):
-        return f'{self.course.CourseID} Section {self.id}'
+        section_id = self.id % 3
+        if section_id == 0:
+            section_id += 3
+        return f'{self.course.CourseID} Section {section_id}'
+
+
+class Transcript(models.Model):
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.student.user.first_name} {self.student.user.last_name} Transcript'
+
+
+class Grade(models.Model):
+    transcript = models.ForeignKey(Transcript, on_delete=models.CASCADE, related_name='grades')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    instructor = models.ForeignKey(User, on_delete=models.CASCADE)
+    value = models.FloatField()
+
+    def __str__(self):
+        return f'Grade for {self.transcript.student.user.first_name} {self.transcript.student.user.last_name} ' \
+               f'in {self.course.CourseID} by {self.instructor.first_name} {self.instructor.last_name}'
+
