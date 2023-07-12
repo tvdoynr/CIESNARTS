@@ -1,0 +1,59 @@
+{% extends 'ciesza_base.html' %}
+
+{% block content %}
+
+    <table>
+        <tbody>
+        {% for submission in submissions_page_obj %}
+            <tr>
+                <td>
+                    <div class="vote"
+                         data-what-type="submission"
+                         data-what-id="{{ submission.id }}">
+                        {% with vote_value=submission_votes %}
+                            <div><i class="fas fa-chevron-up {% if  vote_value == 1 %} upvoted {% endif %}"
+                                    title="upvote" onclick="vote(this)"></i>
+                            </div>
+                            <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
+                            <div><i class="fas fa-chevron-down {% if  vote_value == -1 %} downvoted {% endif %}"
+                                    title="downvote"
+                                    onclick="vote(this)"></i></div>
+                        {% endwith %}
+                    </div>
+                </td>
+                <td class="info-container" style="padding-left: 10px">
+                    <a class="thread-title" href="{{ submission.linked_url }}">{{ submission.title }}</a>
+                    <br>
+                    <h6 class="thread-info">submitted {{ submission.timestamp }} by <a
+                            href="/user/{{ submission.author_name }}">{{ submission.author_name }}</a></h6>
+
+                    <ul class="buttons">
+                        <li><a href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }} comments</a></li>
+                    </ul>
+
+
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pager">
+            {% if submissions_page_obj.has_previous %}
+                <li class="previous"><a href="?page={{ submissions_page_obj.previous_page_number }}"><span
+                        aria-hidden="true">&larr;</span> Previous</a></li>
+            {% else %}
+                <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span> Previous</a></li>
+            {% endif %}
+
+            {% if submissions_page_obj.has_next %}
+                <li class="next"><a href="?page={{ submissions_page_obj.next_page_number }}">Next <span
+                        aria-hidden="true">&rarr;</span></a></li>
+            {% else %}
+                <li class="next disabled"><a href="#">Next <span aria-hidden="true">&rarr;</span></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+{% endblock %}

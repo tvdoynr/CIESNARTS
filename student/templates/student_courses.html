@@ -97,7 +97,7 @@
                     enrolled_button.addEventListener('click', () => {
                         const enrolled_course = [...enrolled_radio].find((radio) => radio.checked).value;
 
-                        const enrolled_URL = `/student/course/${enrolled_course}/enroll/`;
+                        const enrolled_URL = `/ciesza/submissions/${enrolled_course}/`;
                         window.location.href = enrolled_URL;
                     });
             </script>

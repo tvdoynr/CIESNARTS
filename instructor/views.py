@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -151,3 +151,10 @@ class InstructorAccountView(View):
             email_form = ChangeEmailForm()
 
         return render(request, "instructor_account.html", {"password_form": password_form, 'email_form': email_form})
+
+
+class InstructorLogoutView(View):
+    def get(self, request):
+        logout(request)
+
+        return redirect(reverse("HomePage"))

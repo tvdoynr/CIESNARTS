@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
@@ -154,3 +154,10 @@ class StudentTranscriptView(View):
         }
 
         return render(request, 'student_transcript.html', context)
+
+
+class StudentLogoutView(View):
+    def get(self, request):
+        logout(request)
+
+        return redirect(reverse("HomePage"))

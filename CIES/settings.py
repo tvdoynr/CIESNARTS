@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'instructor.apps.InstructorConfig',
     'manager.apps.ManagerConfig',
     'bootstrap5',
+    'ciesza.apps.CieszaConfig',
 ]
 
 MIDDLEWARE = [

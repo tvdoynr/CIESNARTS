@@ -1,0 +1,26 @@
+<div class="comment">
+    <p>Commented by:{{ comment.author_name }}</p>
+    <p>Score: {{ comment.score }}</p>
+    <p>{{ comment.timestamp }}</p>
+    <p>{{ comment.text }}</p>
+
+
+    <form method="post">
+        {% csrf_token %}
+            <label for="comment"> Reply:</label>
+            <input type="text" id="text" name="text" class="form-control" required>
+            <input type="hidden" id="parent_comment" name="parent_comment" value="{{ comment.id }}">
+        <button type="submit" name="reply">Reply</button>
+    </form>
+
+
+    <div class="replies">
+        {% for reply in comment.replies.all %}
+            <div class="reply">
+                {% with comment=reply %}
+                    {% include 'ciesza_comment.html' %}
+                {% endwith %}
+            </div>
+        {% endfor %}
+    </div>
+</div>

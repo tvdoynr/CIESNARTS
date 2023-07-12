@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -249,3 +249,10 @@ class CourseEditView(View):
             'section_formset': section_formset,
         }
         return render(request, self.template_name, context)
+
+
+class ManagerLogoutView(View):
+    def get(self, request):
+        logout(request)
+
+        return redirect(reverse("HomePage"))
