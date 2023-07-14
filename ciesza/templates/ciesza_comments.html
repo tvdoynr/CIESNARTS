@@ -1,22 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'ciesza_base.html' %}
+{% load humanize %}
+
+{% block content %}
 <head>
     <title>Comments for {{ submission.title }}</title>
     <style>
         .reply {
-            margin-left: 21px;
+            margin-left: 3%;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>{{ submission.title }}</h1>
-    <p>Posted by: {{ submission.author_name }}</p>
-    <p>Timestamp: {{ submission.timestamp }}</p>
-    <p>{{ submission.text }}</p>
+<h2 style="margin-left: 6px"> {{ submission.title }}</h2>
+<div class="row">
+    <div style="width: 2%">
+        <div><i class="fas fa-chevron-up {% if  vote_value == 1 %} upvoted {% endif %}"
+                title="upvote" onclick="vote(this)"></i>
+        </div>
+        <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
+        <div><i class="fas fa-chevron-down {% if  vote_value == -1 %} downvoted {% endif %}"
+                title="downvote"
+                onclick="vote(this)"></i></div>
+    </div>
+    <div style="width: 98%">
 
-    <h2>Comments</h2>
-    <div>
+        <a>Posted {{ submission.timestamp|naturaltime }} by</a>
+        <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}"> {{ submission.author_name }} </a>
+        <p style="margin-top: 20px; font-size: 20px; font-family: Inter">{{ submission.text }}</p>
 
+    </div>
+</div>
+<div>
+    <h3>Comments</h3>
     <form method="post">
         {% csrf_token %}
 
@@ -26,9 +42,10 @@
             <button type="submit" name="comment">Comment</button>
         </div>
     </form>
-        {% for comment in comments %}
-            {% include 'ciesza_comment.html' %}
-        {% endfor %}
-    </div>
+    <br>
+    {% for comment in comments %}
+        {% include 'ciesza_comment.html' %}
+    {% endfor %}
+</div>
 </body>
-</html>
+{% endblock %}

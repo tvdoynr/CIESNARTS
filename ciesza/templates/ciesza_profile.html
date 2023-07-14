@@ -1,0 +1,87 @@
+{% extends 'ciesza_base.html' %}
+
+{% block title %} Profile {% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-8">
+            <h1> Your Submissions </h1>
+            <table>
+            <tbody>
+            {% for submission in submissions_page_obj %}
+                <tr>
+                    <td>
+                        <div class="vote"
+                             data-what-type="submission"
+                             data-what-id="{{ submission.id }}">
+                            {% with vote_value=submission_votes %}
+                                <div><i class="fas fa-chevron-up {% if  vote_value == 1 %} upvoted {% endif %}"
+                                        title="upvote" onclick="vote(this)"></i>
+                                </div>
+                                <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
+                                <div><i class="fas fa-chevron-down {% if  vote_value == -1 %} downvoted {% endif %}"
+                                        title="downvote"
+                                        onclick="vote(this)"></i></div>
+                            {% endwith %}
+                        </div>
+                    </td>
+                    <td class="info-container" style="padding-left: 10px">
+                        <a class="thread-title" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.title }}</a>
+                        <br>
+                        <h6 class="thread-info">submitted {{ submission.timestamp }} by <a
+                                href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}">{{ submission.author_name }}</a></h6>
+
+                        <ul class="buttons">
+                            <li><a href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }} comments</a></li>
+                        </ul>
+
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+            <nav>
+                <ul class="pager">
+                    {% if submissions_page_obj.has_previous %}
+                        <li class="previous"><a href="?page={{ submissions_page_obj.previous_page_number }}"><span
+                                aria-hidden="true">&larr;</span> Previous</a></li>
+                    {% else %}
+                        <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span> Previous</a></li>
+                    {% endif %}
+
+                    {% if submissions_page_obj.has_next %}
+                        <li class="next"><a href="?page={{ submissions_page_obj.next_page_number }}">Next <span
+                                aria-hidden="true">&rarr;</span></a></li>
+                    {% else %}
+                        <li class="next disabled"><a href="#">Next <span aria-hidden="true">&rarr;</span></a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+    <div class="col-md-4">
+        <h1> Profile </h1>
+        <div>
+            <h3> Score: {{ author.score }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {% if user_id == request.user.id %}
+                <a href="{% url 'CieszaProfileEditPage' user_id=user_id course_id=course_id %}"><i class="fas fa-cog" href></i></a>
+                {% endif %}
+            </h3>
+
+            {% for course in courses %}
+                <li>
+                <label>
+                    {{ course.CourseID }} - {{ course.CourseName }}
+                </label>
+                </li>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    </div>
+
+{% endblock %}

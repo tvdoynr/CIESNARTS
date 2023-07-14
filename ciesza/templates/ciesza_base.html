@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <style>
+        .upvoted {
+            color: orangered;
+        }
+    </style>
     <title>{% block title %}Default Title{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     {% block extra_head %}{% endblock %}
@@ -21,13 +26,19 @@
 
             </ul>
 
-            {% if user.is_authenticated %}
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'StudentLogout' %}">Logout</a>
-                    </li>
-                </ul>
-            {% endif %}
+            <ul class="navbar-nav ml-auto">
+
+                <li class="nav-item {% if request.resolver_match.view_name == 'CieszaProfilePage' %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'CieszaProfilePage' course_id=course_id user_id=request.user.id %}">Profile </a>
+                </li>
+
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'StudentLogout' %}">Logout</a>
+                </li>
+                {% endif %}
+
+            </ul>
         </div>
     </nav>
 

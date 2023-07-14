@@ -1,18 +1,36 @@
+{% load humanize %}
 <div class="comment">
-    <p>Commented by:{{ comment.author_name }}</p>
-    <p>Score: {{ comment.score }}</p>
-    <p>{{ comment.timestamp }}</p>
-    <p>{{ comment.text }}</p>
+    <div class="row" style="margin-left: 0%">
+    <div style="width: 2%">
+        <div><i class="fas fa-chevron-up {% if  vote_value == 1 %} upvoted {% endif %}"
+                title="upvote" onclick="vote(this)"></i>
+        </div>
+        <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
+        <div><i class="fas fa-chevron-down {% if  vote_value == -1 %} downvoted {% endif %}"
+                title="downvote"
+                onclick="vote(this)"></i></div>
+    </div>
+    <div style="width: 98%">
 
+        <a>Commented {{ comment.timestamp|naturaltime }} by </a>
+        <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=comment.author.user_id %}">
+            {{ comment.author_name }} </a>
+        <p style="margin-top: 10px; font-family: Inter; font-size: 20px">{{ comment.text }}</p>
 
-    <form method="post">
-        {% csrf_token %}
+    </div>
+</div>
+
+    <button class="reply-btn" data-commentid="{{ comment.id }}">Reply</button>
+
+    <div class="reply-form" id="reply-form-{{ comment.id }}" style="display:none;">
+        <form method="post">
+            {% csrf_token %}
             <label for="comment"> Reply:</label>
             <input type="text" id="text" name="text" class="form-control" required>
             <input type="hidden" id="parent_comment" name="parent_comment" value="{{ comment.id }}">
-        <button type="submit" name="reply">Reply</button>
-    </form>
-
+            <button type="submit" name="reply">Submit Reply</button>
+        </form>
+    </div>
 
     <div class="replies">
         {% for reply in comment.replies.all %}
@@ -24,3 +42,29 @@
         {% endfor %}
     </div>
 </div>
+
+
+<script>
+    let replyButtons = document.getElementsByClassName('reply-btn');
+    let currentVisibleForm = null;
+
+    for (let i = 0; i < replyButtons.length; i++) {
+        replyButtons[i].addEventListener('click', function() {
+            let commentId = this.getAttribute('data-commentid');
+            let replyForm = document.getElementById('reply-form-' + commentId);
+
+            if (currentVisibleForm && currentVisibleForm !== replyForm) {
+                currentVisibleForm.style.display = 'none';
+            }
+
+            if (replyForm.style.display === 'block') {
+                replyForm.style.display = 'none';
+                currentVisibleForm = null;
+            } else {
+                replyForm.style.display = 'block';
+                currentVisibleForm = replyForm;
+            }
+        });
+    }
+</script>
+

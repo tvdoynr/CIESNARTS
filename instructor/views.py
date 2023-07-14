@@ -2,23 +2,37 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
-
 from accounts.models import Section, Profile, Transcript, Grade
 from .forms import ChangeEmailForm, ChangePasswordForm
 
 
+def user_is_instructor(function):
+    def wrap(request, *args, **kwargs):
+        profile = Profile.objects.get(user=request.user)
+        if profile.user_type == 'instructor':
+            return function(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    wrap.__doc__ = function.__doc__
+    wrap.__name__ = function.__name__
+    return wrap
+
+
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_instructor, name="dispatch")
 class InstructorView(View):
     def get(self, request):
         return render(request, "instructor_dashboard.html")
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_instructor, name="dispatch")
 class InstructorCoursesView(View):
     def get(self, request):
         instructor = User.objects.get(pk=request.user.pk)
@@ -42,6 +56,7 @@ class InstructorCoursesView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_instructor, name="dispatch")
 class InstructorGradeView(View):
     def get(self, request, section_id):
         section = Section.objects.get(pk=section_id)
@@ -103,6 +118,7 @@ class InstructorGradeView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_instructor, name="dispatch")
 class InstructorAccountView(View):
     def get(self, request):
         password_form = ChangePasswordForm()
@@ -153,6 +169,8 @@ class InstructorAccountView(View):
         return render(request, "instructor_account.html", {"password_form": password_form, 'email_form': email_form})
 
 
+@method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_instructor, name="dispatch")
 class InstructorLogoutView(View):
     def get(self, request):
         logout(request)

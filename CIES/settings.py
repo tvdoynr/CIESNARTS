@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'manager.apps.ManagerConfig',
     'bootstrap5',
     'ciesza.apps.CieszaConfig',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [

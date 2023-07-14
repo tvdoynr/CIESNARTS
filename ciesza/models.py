@@ -6,7 +6,7 @@ from accounts.models import Profile, Course
 
 class Submission(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, related_name='submissions')
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='author_submissions')
     author_name = models.CharField(null=True)
     title = models.CharField(max_length=50)
     text = models.TextField(max_length=2000)

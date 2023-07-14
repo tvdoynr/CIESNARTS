@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -11,7 +12,20 @@ from accounts.models import Course, Section, Profile, Transcript, Grade
 from .forms import ChangeEmailForm, ChangePasswordForm
 
 
+def user_is_student(function):
+    def wrap(request, *args, **kwargs):
+        profile = Profile.objects.get(user=request.user)
+        if profile.user_type == 'student':
+            return function(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    wrap.__doc__ = function.__doc__
+    wrap.__name__ = function.__name__
+    return wrap
+
+
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_student, name="dispatch")
 class StudentView(View):
     def get(self, request):
 
@@ -19,6 +33,7 @@ class StudentView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_student, name="dispatch")
 class StudentAccountView(View):
     def get(self, request):
         password_form = ChangePasswordForm()
@@ -70,6 +85,7 @@ class StudentAccountView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_student, name="dispatch")
 class StudentCourseView(View):
     def get(self, request):
         student = Profile.objects.get(user=request.user)
@@ -95,6 +111,7 @@ class StudentCourseView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_student, name="dispatch")
 class StudentTakeCourseView(View):
     def get(self, request, course_id):
         course = Course.objects.get(pk=course_id)
@@ -130,6 +147,7 @@ class StudentTakeCourseView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_student, name="dispatch")
 class StudentTranscriptView(View):
     def get(self, request):
         student = Profile.objects.get(user=request.user)
@@ -156,6 +174,8 @@ class StudentTranscriptView(View):
         return render(request, 'student_transcript.html', context)
 
 
+@method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_student, name="dispatch")
 class StudentLogoutView(View):
     def get(self, request):
         logout(request)

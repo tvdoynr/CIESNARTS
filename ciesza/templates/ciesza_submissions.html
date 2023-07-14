@@ -1,5 +1,5 @@
 {% extends 'ciesza_base.html' %}
-
+{% load humanize %}
 {% block content %}
 
     <table>
@@ -22,10 +22,10 @@
                     </div>
                 </td>
                 <td class="info-container" style="padding-left: 10px">
-                    <a class="thread-title" href="{{ submission.linked_url }}">{{ submission.title }}</a>
+                    <a class="thread-title" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.title }}</a>
                     <br>
-                    <h6 class="thread-info">submitted {{ submission.timestamp }} by <a
-                            href="/user/{{ submission.author_name }}">{{ submission.author_name }}</a></h6>
+                    <h6 class="thread-info">Submitted {{ submission.timestamp|naturaltime }} by <a
+                            href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}">{{ submission.author_name }}</a></h6>
 
                     <ul class="buttons">
                         <li><a href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }} comments</a></li>

@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.forms import formset_factory
@@ -14,13 +15,27 @@ from .forms import ChangeEmailForm, ChangePasswordForm, CourseForm, SemesterForm
 from accounts.models import Course, Profile, Section
 
 
+def user_is_manager(function):
+    def wrap(request, *args, **kwargs):
+        profile = Profile.objects.get(user=request.user)
+        if profile.user_type == 'manager':
+            return function(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    wrap.__doc__ = function.__doc__
+    wrap.__name__ = function.__name__
+    return wrap
+
+
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_manager, name="dispatch")
 class ManagerView(View):
     def get(self, request):
         return render(request, "manager_dashboard.html")
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_manager, name="dispatch")
 class ManagerAccountView(View):
     def get(self, request):
         password_form = ChangePasswordForm()
@@ -73,6 +88,7 @@ class ManagerAccountView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_manager, name="dispatch")
 class CourseCreateView(View):
     def get(self, request, *args, **kwargs):
         course_create_form = CourseForm()
@@ -103,6 +119,7 @@ class CourseCreateView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_manager, name="dispatch")
 class AddUserView(View):
     def get(self, request):
         add_user_form = CreateUserForm()
@@ -184,6 +201,7 @@ class AddUserView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_manager, name="dispatch")
 class SemesterCreateView(View):
     def get(self, request):
         form = SemesterForm()
@@ -201,6 +219,7 @@ class SemesterCreateView(View):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_manager, name="dispatch")
 class CourseEditView(View):
     template_name = 'manager_edit_course.html'
     SectionFormSet = formset_factory(SectionForm, extra=0)
@@ -251,6 +270,8 @@ class CourseEditView(View):
         return render(request, self.template_name, context)
 
 
+@method_decorator(login_required, name="dispatch")
+@method_decorator(user_is_manager, name="dispatch")
 class ManagerLogoutView(View):
     def get(self, request):
         logout(request)
