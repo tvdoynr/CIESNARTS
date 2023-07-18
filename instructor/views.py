@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
-from accounts.models import Section, Profile, Transcript, Grade
+from accounts.models import Section, Profile, Transcript, Grade, Course
 from .forms import ChangeEmailForm, ChangePasswordForm
 
 
@@ -37,9 +37,10 @@ class InstructorCoursesView(View):
     def get(self, request):
         instructor = User.objects.get(pk=request.user.pk)
         active_courses = Section.objects.filter(Instructor=instructor).order_by('course__CourseID')
+        enrolled_courses = Course.objects.filter(sections__Instructor=instructor).order_by('CourseID')
 
         paginator_active_page = Paginator(active_courses, 5)
-        paginator_forum_page = Paginator(active_courses, 5)
+        paginator_forum_page = Paginator(enrolled_courses, 5)
 
         active_page_number = request.GET.get('active_page')
         forum_page_number = request.GET.get('forum_page')

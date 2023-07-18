@@ -1,7 +1,7 @@
 {% extends 'student_base.html' %}
 
 {% block content %}
-    <div class="row">
+    <div class="container">
     <h1> General Informations for Student</h1>
         <li class="list-group-item">
             <label>
@@ -11,9 +11,11 @@
             <label>
                 Course Name: {{ course.CourseName }}
             </label>
+            <br>
             <label>
                 Course Description: {{ course.Description }}
             </label>
+            <br>
             <label>
                 Course Credit: {{ course.CourseCredit }}
             </label>
@@ -34,9 +36,11 @@
                                 <label>
                                     Number of the students :{{ section.NumberOfStudents}}
                                 </label>
+                                <br>
                                 <label>
                                     Classroom :{{ section.Classroom}}
                                 </label>
+                                <br>
                                 <label>
                                     Instructor :{{ section.Instructor.first_name}} {{ section.Instructor.last_name}}
                                 </label>

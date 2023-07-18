@@ -1,5 +1,5 @@
 {% extends 'ciesza_base.html' %}
-
+{% load humanize %}
 {% block title %} Profile {% endblock %}
 
 {% block content %}
@@ -13,22 +13,21 @@
                     <td>
                         <div class="vote"
                              data-what-type="submission"
-                             data-what-id="{{ submission.id }}">
-                            {% with vote_value=submission_votes %}
-                                <div><i class="fas fa-chevron-up {% if  vote_value == 1 %} upvoted {% endif %}"
+                             data-what-id="{{ submission.id }}"
+                             data-what-user="{{ request.user }}">
+                                <div><i class="fas fa-chevron-up {% if submission.up_voted %} upvoted {% endif %}"
                                         title="upvote" onclick="vote(this)"></i>
                                 </div>
                                 <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
-                                <div><i class="fas fa-chevron-down {% if  vote_value == -1 %} downvoted {% endif %}"
+                                <div><i class="fas fa-chevron-down {% if submission.down_voted %} downvoted {% endif %}"
                                         title="downvote"
                                         onclick="vote(this)"></i></div>
-                            {% endwith %}
                         </div>
                     </td>
                     <td class="info-container" style="padding-left: 10px">
                         <a class="thread-title" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.title }}</a>
                         <br>
-                        <h6 class="thread-info">submitted {{ submission.timestamp }} by <a
+                        <h6 class="thread-info">submitted {{ submission.timestamp|naturaltime }} by <a
                                 href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}">{{ submission.author_name }}</a></h6>
 
                         <ul class="buttons">
@@ -83,5 +82,41 @@
 
 
     </div>
+
+    <script>
+        function vote(element) {
+            var whatId = $(element).parent().parent().data("what-id");
+            var whatType = $(element).parent().parent().data("what-type");
+            var whatUser = $(element).parent().parent().data("what-user")
+            var voteType = $(element).attr("title") === "upvote" ? "up_vote" : "down_vote";
+
+            $.ajax({
+                type: 'post',
+                data: {
+                    'what_id': whatId,
+                    'what_type': whatType,
+                    'vote_type': voteType,
+                    'what_user': whatUser,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // CSRF token for Django
+                },
+                success: function(response) {
+                    // Update the vote count on the page, depending on the response from the server
+                    $(element).parent().parent().find('.score').html(response.new_score);
+                    $('#author-score').html('Score: ' + response.author_score);
+
+                    console.log(response.new_score)
+
+                    // Toggle the upvoted or downvoted class
+                    if (voteType === "up_vote") {
+                        $(element).toggleClass('upvoted');
+                        $(element).parent().parent().find('.fa-chevron-down').removeClass('downvoted');
+                    } else {
+                        $(element).toggleClass('downvoted');
+                        $(element).parent().parent().find('.fa-chevron-up').removeClass('upvoted');
+                    }
+                }
+            });
+        }
+    </script>
 
 {% endblock %}

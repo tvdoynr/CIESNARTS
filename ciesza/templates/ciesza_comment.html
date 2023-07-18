@@ -1,12 +1,16 @@
 {% load humanize %}
 <div class="comment">
     <div class="row" style="margin-left: 0%">
-    <div style="width: 2%">
-        <div><i class="fas fa-chevron-up {% if  vote_value == 1 %} upvoted {% endif %}"
+    <div class="vote"
+         data-what-type="comment"
+         data-what-id="{{ comment.id }}"
+         data-what-user="{{ request.user }}"
+         style="width: 2%">
+        <div><i class="fas fa-chevron-up {% if comment.up_voted %} upvoted {% endif %}"
                 title="upvote" onclick="vote(this)"></i>
         </div>
-        <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
-        <div><i class="fas fa-chevron-down {% if  vote_value == -1 %} downvoted {% endif %}"
+        <div class="score" style="padding-left: 3px" title="score">{{ comment.score }}</div>
+        <div><i class="fas fa-chevron-down {% if comment.down_voted %} downvoted {% endif %}"
                 title="downvote"
                 onclick="vote(this)"></i></div>
     </div>
@@ -44,27 +48,5 @@
 </div>
 
 
-<script>
-    let replyButtons = document.getElementsByClassName('reply-btn');
-    let currentVisibleForm = null;
 
-    for (let i = 0; i < replyButtons.length; i++) {
-        replyButtons[i].addEventListener('click', function() {
-            let commentId = this.getAttribute('data-commentid');
-            let replyForm = document.getElementById('reply-form-' + commentId);
-
-            if (currentVisibleForm && currentVisibleForm !== replyForm) {
-                currentVisibleForm.style.display = 'none';
-            }
-
-            if (replyForm.style.display === 'block') {
-                replyForm.style.display = 'none';
-                currentVisibleForm = null;
-            } else {
-                replyForm.style.display = 'block';
-                currentVisibleForm = replyForm;
-            }
-        });
-    }
-</script>
 

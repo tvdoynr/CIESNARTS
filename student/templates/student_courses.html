@@ -9,7 +9,7 @@
                     {% for can_enroll_course in can_enroll_page_obj %}
                       <li>
                         <label>
-                          {{ can_enroll_course.CourseID }}  {{ can_enroll_course.CourseName }}  {{ can_enroll_course.CourseCredit}}
+                          {{ can_enroll_course.CourseID }}  {{ can_enroll_course.CourseName }}
                             <input type="radio" name="can_enroll_course" value="{{ can_enroll_course.pk }}">
                         </label>
                       </li>
@@ -71,7 +71,7 @@
                 {% for enrolled_course in enrolled_page_obj %}
                     <li>
                         <label>
-                            {{ enrolled_course.CourseID }}  {{ enrolled_course.CourseName }}  {{ enrolled_course.CourseCredit}}
+                            {{ enrolled_course.CourseID }}  {{ enrolled_course.CourseName }}
                             <input type="radio" name="enrolled_course" value="{{ enrolled_course.pk }}">
                         </label>
                       </li>
@@ -81,7 +81,7 @@
 
                 </ul>
 
-                <button type="submit" id="enrolled-button" name="enroll" class="btn btn-sm btn-primary" disabled>Enroll</button>
+                <button type="submit" id="enrolled-button" name="enroll" class="btn btn-sm btn-primary" disabled>Ciesza</button>
 
                 <script>
                     const enrolled_radio = document.querySelectorAll('input[name="enrolled_course"]');
