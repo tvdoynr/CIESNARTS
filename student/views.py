@@ -1,14 +1,19 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
+from django.db.models import F
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 
-from accounts.models import Course, Section, Profile, Transcript, Grade
+from accounts.models import Course, Section, Profile, Grade, Semester
 from .forms import ChangeEmailForm, ChangePasswordForm
 
 
@@ -19,6 +24,7 @@ def user_is_student(function):
             return function(request, *args, **kwargs)
         else:
             raise PermissionDenied
+
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
     return wrap
@@ -28,7 +34,6 @@ def user_is_student(function):
 @method_decorator(user_is_student, name="dispatch")
 class StudentView(View):
     def get(self, request):
-
         return render(request, "student_dashboard.html")
 
 
@@ -49,7 +54,6 @@ class StudentAccountView(View):
             if password_form.is_valid():
                 current_password = password_form.cleaned_data.get("current_password")
                 new_password = password_form.cleaned_data.get("new_password")
-                new_password_again = password_form.cleaned_data.get("new_password_again")
 
                 user = authenticate(request, username=request.user.username, password=current_password)
 
@@ -89,8 +93,12 @@ class StudentAccountView(View):
 class StudentCourseView(View):
     def get(self, request):
         student = Profile.objects.get(user=request.user)
-        active_courses = Course.objects.filter(is_active=True).order_by("CourseID")
-        enrolled_courses = Course.objects.filter(sections__students=student).order_by("CourseID")
+
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
+
+        active_courses = Course.objects.filter(is_active=True, semester=semester).order_by("course_id")
+        enrolled_courses = Course.objects.filter(sections__students=student).order_by("course_id")
 
         active_courses = [course for course in active_courses if not course.is_student_enrolled(student)]
 
@@ -117,10 +125,52 @@ class StudentTakeCourseView(View):
         course = Course.objects.get(pk=course_id)
         sections = course.sections.all()
 
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
+
+        grades = {}
+        for section in sections:
+            grades[section.id] = Grade.objects.filter(course__course_id=course.course_id,
+                                                      instructor=section.Instructor).exclude(course__semester=semester)
+
+        print(grades)
+        bins = {}
+        for section_id, grade_values in grades.items():
+            bins[section_id] = [0] * 11
+            for grade_value in grade_values:
+                if grade_value.value >= 95:
+                    bins[section_id][0] += 1
+                elif grade_value.value >= 90:
+                    bins[section_id][1] += 1
+                elif grade_value.value >= 85:
+                    bins[section_id][2] += 1
+                elif grade_value.value >= 80:
+                    bins[section_id][3] += 1
+                elif grade_value.value >= 75:
+                    bins[section_id][4] += 1
+                elif grade_value.value >= 70:
+                    bins[section_id][5] += 1
+                elif grade_value.value >= 65:
+                    bins[section_id][6] += 1
+                elif grade_value.value >= 60:
+                    bins[section_id][7] += 1
+                elif grade_value.value >= 55:
+                    bins[section_id][8] += 1
+                elif grade_value.value >= 50:
+                    bins[section_id][9] += 1
+                else:
+                    bins[section_id][10] += 1
+
+        bins_list = [(k, v) for k, v in bins.items()]
+
         context = {
             'course': course,
             'sections': sections,
+            'bin_list': bins_list,
+            'bins': json.dumps(bins),
         }
+
+        print(bins)
 
         return render(request, "student_enroll_course.html", context)
 
@@ -151,27 +201,169 @@ class StudentTakeCourseView(View):
 class StudentTranscriptView(View):
     def get(self, request):
         student = Profile.objects.get(user=request.user)
-        grades = Grade.objects.filter(transcript__student=student).order_by("course__CourseID")
 
-        '''letter_grades = ["A1" if grade >= 95
-                         else ("A2" if grade >= 90
-                              else ("A3" if grade >= 85
-                                   else ("B1" if grade >= 80
-                                         else ("B2" if grade >= 75
-                                               else ("B3" if grade >= 70
-                                                     else ("C1" if grade >= 65
-                                                           else ("C2" if grade >= 60
-                                                                 else ("C3" if grade >= 55
-                                                                       else ("D" if grade >= 50
-                                                                             else "F")))))))))
-                         for grade in grades]'''
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
+
+        print(semester)
+        semesters = Semester.objects.all()
+
+        semester_grades = Grade.objects.filter(transcript__student=student, course__semester=semester).annotate(
+            course_credit=F('course__course_credit')).order_by("course__course_id")
+
+        total_grades = Grade.objects.filter(transcript__student=student).annotate(
+            course_credit=F('course__course_credit'))
+
+        letter_to_gpa = {
+            'A1': 4.0, 'A2': 3.75, 'A3': 3.50,
+            'B1': 3.25, 'B2': 3.0, 'B3': 2.75,
+            'C1': 2.50, 'C2': 2.25, 'C3': 2.0,
+            'D': 1.75, 'F': 0.0
+        }
+
+        semester_credits = 0
+        semester_grades_x_credits = 0
+
+        all_grade = []
+        for grade in semester_grades:
+            letter_grade = "A1" if grade.value >= 95 else (
+                "A2" if grade.value >= 90 else (
+                    "A3" if grade.value >= 85 else (
+                        "B1" if grade.value >= 80 else (
+                            "B2" if grade.value >= 75 else (
+                                "B3" if grade.value >= 70 else (
+                                    "C1" if grade.value >= 65 else (
+                                        "C2" if grade.value >= 60 else (
+                                            "C3" if grade.value >= 55 else (
+                                                "D" if grade.value >= 50 else "F"
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+            semester_credits += grade.course_credit
+            semester_grades_x_credits += letter_to_gpa[letter_grade] * grade.course_credit
+            all_grade.append(letter_grade)
+
+        semester_final_grades = zip(semester_grades, all_grade)
+
+        try:
+            semester_gpa = round(semester_grades_x_credits / semester_credits, 2)
+        except ZeroDivisionError:
+            semester_gpa = 0
+
+        total_credits = 0
+        total_grades_x_credits = 0
+
+        for grade in total_grades:
+            letter_grade = "A1" if grade.value >= 95 else (
+                "A2" if grade.value >= 90 else (
+                    "A3" if grade.value >= 85 else (
+                        "B1" if grade.value >= 80 else (
+                            "B2" if grade.value >= 75 else (
+                                "B3" if grade.value >= 70 else (
+                                    "C1" if grade.value >= 65 else (
+                                        "C2" if grade.value >= 60 else (
+                                            "C3" if grade.value >= 55 else (
+                                                "D" if grade.value >= 50 else "F"
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+            total_credits += grade.course_credit
+            total_grades_x_credits += letter_to_gpa[letter_grade] * grade.course_credit
+
+        try:
+            total_gpa = round(total_grades_x_credits / total_credits, 2)
+        except ZeroDivisionError:
+            total_gpa = 0
 
         context = {
             'student': student,
-            'grades': grades,
+            'semester_final_grades': semester_final_grades,
+            'semester': semester,
+            'semesters': semesters,
+            'semester_gpa': semester_gpa,
+            'total_gpa': total_gpa,
+            'default_semester_id': semester.id,
         }
 
         return render(request, 'student_transcript.html', context)
+
+    def post(self, request):
+        semester_id = request.POST.get("semester_id")
+        semester = Semester.objects.get(pk=semester_id)
+        student = Profile.objects.get(user=request.user)
+
+        semester_grades = Grade.objects.filter(transcript__student=student, course__semester=semester).annotate(
+            course_credit=F('course__course_credit')).order_by("course__course_id")
+
+        letter_to_gpa = {
+            'A1': 4.0, 'A2': 3.75, 'A3': 3.50,
+            'B1': 3.25, 'B2': 3.0, 'B3': 2.75,
+            'C1': 2.50, 'C2': 2.25, 'C3': 2.0,
+            'D': 1.75, 'F': 0.0
+        }
+
+        semester_credits = 0
+        semester_grades_x_credits = 0
+
+        all_grade = []
+        for grade in semester_grades:
+            letter_grade = "A1" if grade.value >= 95 else (
+                "A2" if grade.value >= 90 else (
+                    "A3" if grade.value >= 85 else (
+                        "B1" if grade.value >= 80 else (
+                            "B2" if grade.value >= 75 else (
+                                "B3" if grade.value >= 70 else (
+                                    "C1" if grade.value >= 65 else (
+                                        "C2" if grade.value >= 60 else (
+                                            "C3" if grade.value >= 55 else (
+                                                "D" if grade.value >= 50 else "F"
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+            semester_credits += grade.course_credit
+            semester_grades_x_credits += letter_to_gpa[letter_grade] * grade.course_credit
+            all_grade.append(letter_grade)
+
+        final_grades = zip(semester_grades, all_grade)
+
+        try:
+            semester_gpa = round(semester_grades_x_credits / semester_credits, 2)
+        except ZeroDivisionError:
+            semester_gpa = 0
+
+        grades_list = []
+        for grade, letter_grade in final_grades:
+            grades_list.append({
+                'course_id': grade.course.course_id,
+                'instructor': f"{grade.instructor.first_name} {grade.instructor.last_name}",
+                'letter_grade': letter_grade,
+                'course_credit': grade.course_credit,
+                'semester_gpa': semester_gpa,
+            })
+        context = {
+            'semester_final_grades': grades_list,
+            'semester_gpa': semester_gpa,
+        }
+
+        return JsonResponse(context)
 
 
 @method_decorator(login_required, name="dispatch")

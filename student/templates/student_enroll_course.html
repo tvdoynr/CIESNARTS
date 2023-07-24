@@ -5,19 +5,19 @@
     <h1> General Informations for Student</h1>
         <li class="list-group-item">
             <label>
-                Course Code: {{ course.CourseID }}
+                Course Code: {{ course.course_id }}
             </label>
             <br>
             <label>
-                Course Name: {{ course.CourseName }}
+                Course Name: {{ course.course_name }}
             </label>
             <br>
             <label>
-                Course Description: {{ course.Description }}
+                Course Description: {{ course.description|safe }}
             </label>
             <br>
             <label>
-                Course Credit: {{ course.CourseCredit }}
+                Course Credit: {{ course.course_credit }}
             </label>
         </li>
     </div>
@@ -46,6 +46,20 @@
                                 </label>
                             </button>
                         </form>
+                        <i type="button" class="bi bi-bar-chart-fill"  style="padding: 0px; color: orange" onclick="openModal({{ forloop.counter0 }},
+                                '{{ bins|escapejs|safe }}',
+                                '{{ section.id }}',
+                                '{{ course.course_id }}',
+                                '{{ section.Instructor.first_name }}',
+                                '{{ section.Instructor.last_name }}')"></i>
+
+
+                        <div id="modal-{{ forloop.counter0 }}" class="modal">
+                            <div class="modal-content" style="width: 80%; height: 80%; margin: auto; overflow: auto">
+                                <span class="close" onclick="closeModal({{ forloop.counter0 }})">&times;</span>
+                                <canvas id="chart-{{ forloop.counter0 }}"></canvas>
+                            </div>
+                        </div>
                     </div>
                 {% empty %}
                 <li> There is no section</li>
@@ -64,6 +78,62 @@
     </div>
 
     <script>
+        var bins = {{ bins|safe }};
 
+        // Open the modal and create the chart
+        function openModal(index, bins, section_id, course_id, instructor_first_name, instructor_last_name) {
+            var modal = document.getElementById("modal-" + index);
+            modal.style.display = "block";
+            modal.style.display = "flex";
+            modal.style.alignItems = "center";
+            modal.style.justifyContent = "center";
+            modal.style.position = "fixed";
+            modal.style.zIndex = "1";
+            modal.style.left = "0";
+            modal.style.top = "0";
+            modal.style.width = "100%";
+            modal.style.height = "100%";
+            modal.style.overflow = "auto";
+            modal.style.backgroundColor = "rgba(0,0,0,0.4)";
+            var ctx = document.getElementById('chart-' + index);
+            bins = JSON.parse(bins);  // Parse your dictionary
+            new Chart(ctx, {
+                type: 'bar',
+                options:{
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: {
+                                stepSize: 1,  // This ensures the x-axis uses integers
+                                beginAtZero: true
+                            }
+                        }
+                    },
+                    plugins:{
+                        title: {
+                        display: true,
+                        text: 'Grades in ' + course_id + ' by ' + instructor_first_name + instructor_last_name
+                    }
+                    }
+                },
+                data: {
+                    labels: ['A1', 'A2', 'A3', 'B1', 'B2', 'B3','C1','C2','C3','D','F'],
+                    datasets: [{
+                        label: '# of Students',
+                        data: bins[section_id],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+            });
+        }
+
+        // Close the modal
+        function closeModal(index) {
+            var modal = document.getElementById("modal-" + index);
+            modal.style.display = "none";
+        }
     </script>
+
 {% endblock %}

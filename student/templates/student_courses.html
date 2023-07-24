@@ -9,7 +9,7 @@
                     {% for can_enroll_course in can_enroll_page_obj %}
                       <li>
                         <label>
-                          {{ can_enroll_course.CourseID }}  {{ can_enroll_course.CourseName }}
+                          {{ can_enroll_course.course_id }}  {{ can_enroll_course.course_name }}
                             <input type="radio" name="can_enroll_course" value="{{ can_enroll_course.pk }}">
                         </label>
                       </li>
@@ -46,17 +46,17 @@
               <ul class="pagination">
                 {% if can_enroll_page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ can_enroll_page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?enrolled_page={{ can_enroll_page_obj.previous_page_number }}">Previous</a>
                   </li>
                 {% endif %}
                 {% for i in can_enroll_page_obj.paginator.page_range %}
                   <li class="page-item {% if can_enroll_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    <a class="page-link" href="?enrolled_page={{ i }}">{{ i }}</a>
                   </li>
                 {% endfor %}
                 {% if can_enroll_page_obj.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ can_enroll_page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?enrolled_page={{ can_enroll_page_obj.next_page_number }}">Next</a>
                   </li>
                 {% endif %}
               </ul>
@@ -71,7 +71,7 @@
                 {% for enrolled_course in enrolled_page_obj %}
                     <li>
                         <label>
-                            {{ enrolled_course.CourseID }}  {{ enrolled_course.CourseName }}
+                            {{ enrolled_course.course_id }}  {{ enrolled_course.course_name }}
                             <input type="radio" name="enrolled_course" value="{{ enrolled_course.pk }}">
                         </label>
                       </li>
@@ -108,17 +108,17 @@
               <ul class="pagination">
                 {% if enrolled_page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ enrolled_page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?can_enroll_page={{ enrolled_page_obj.previous_page_number }}">Previous</a>
                   </li>
                 {% endif %}
                 {% for i in enrolled_page_obj.paginator.page_range %}
                   <li class="page-item {% if enrolled_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    <a class="page-link" href="?can_enroll_page={{ i }}">{{ i }}</a>
                   </li>
                 {% endfor %}
                 {% if enrolled_page_obj.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ enrolled_page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?can_enroll_page={{ enrolled_page_obj.next_page_number }}">Next</a>
                   </li>
                 {% endif %}
               </ul>

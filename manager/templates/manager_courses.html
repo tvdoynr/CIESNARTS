@@ -1,4 +1,5 @@
 {% extends 'manager_base.html' %}
+{% load widget_tweaks %}
 
 {% block content %}
     <div class="row">
@@ -6,37 +7,37 @@
       <h2>Add a new course</h2>
       <form method="post">
         {% csrf_token %}
-
+        {{ form.media }}
         {{ form.non_field_errors }}
 
         <div class="fieldWrapper">
-          {{ form.CourseID.errors }}
-          <label for="{{ form.CourseID.id_for_label }}">Course ID:</label>
-          {{ form.CourseID }}
+          {{ form.course_id.errors }}
+          <label for="{{ form.course_id.id_for_label }}">Course ID:</label>
+          {{ form.course_id }}
         </div>
 
         <div class="fieldWrapper">
-          {{ form.CourseName.errors }}
-          <label for="{{ form.CourseName.id_for_label }}">Course Name:</label>
-          {{ form.CourseName }}
+          {{ form.course_name.errors }}
+          <label for="{{ form.course_name.id_for_label }}">Course Name:</label>
+          {{ form.course_name }}
         </div>
 
         <div class="fieldWrapper">
-          {{ form.Description.errors }}
-          <label for="{{ form.Description.id_for_label }}">Description:</label>
-          {{ form.Description }}
+          {{ form.description.errors }}
+          <label for="{{ form.description.id_for_label }}">Description:</label>
+          {{ form.description }}
         </div>
 
         <div class="fieldWrapper">
-          {{ form.CourseCredit.errors }}
-          <label for="{{ form.CourseCredit.id_for_label }}">Course Credit:</label>
-          {{ form.CourseCredit }}
+          {{ form.course_credit.errors }}
+          <label for="{{ form.course_credit.id_for_label }}">Course Credit:</label>
+          {{ form.course_credit }}
         </div>
 
         <div class="fieldWrapper">
           {{ form.semester.errors }}
           <label for="{{ form.semester.id_for_label }}">Semester:</label>
-          {{ form.semester }}
+          {{ form.semester|add_class:"select2" }}
         </div>
 
         <button type="submit">Add course</button>
@@ -57,7 +58,7 @@
                 {% for course in page_obj %}
                   <li>
                     <label>
-                      {{ course.CourseID }} - {{ course.CourseName }}
+                      {{ course.course_id }} - {{ course.course_name }}
                       <input type="radio" name="selected_courses" value="{{ course.pk }}">
                     </label>
                   </li>
@@ -70,6 +71,10 @@
               <button type="submit" id="edit-button" name="edit_course" class="btn btn-sm btn-primary" disabled>Edit Selected Course</button>
 
               <script>
+                  $(document).ready(function() {
+                    $('.select2').select2();
+                  });
+
                   const radios = document.querySelectorAll('input[name="selected_courses"]');
                   const editButton = document.getElementById('edit-button');
 

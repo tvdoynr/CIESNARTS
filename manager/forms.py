@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
+from ckeditor.widgets import CKEditorWidget
+from django.db.models import Q
 
 from accounts.models import Course, Semester, Profile, Section
 
@@ -55,10 +57,16 @@ class CreateUserForm(forms.Form):
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ['CourseID', 'CourseName', 'Description', 'CourseCredit', 'semester']
+        fields = ['course_id', 'course_name', 'description', 'course_credit', 'semester']
+        widgets = {
+            'description': CKEditorWidget()
+        }
 
 
 class SectionForm(forms.ModelForm):
+    def label_from_instance(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
+
     class Meta:
         model = Section
         fields = ['Classroom', 'Instructor']
@@ -66,6 +74,7 @@ class SectionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['Instructor'].queryset = User.objects.filter(profile__user_type='instructor')
+        self.fields['Instructor'].label_from_instance = self.label_from_instance
 
 
 class DateInput(forms.DateInput):
@@ -81,6 +90,26 @@ class SemesterForm(forms.ModelForm):
             'finish_date': DateInput(),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        finish_date = cleaned_data.get('finish_date')
+
+        if start_date and finish_date:
+            if start_date > finish_date:
+                raise forms.ValidationError(
+                    "Finish date should be after the start date."
+                )
+
+            overlapping_semesters = Semester.objects.filter(
+                Q(start_date__lte=start_date, finish_date__gte=start_date) |
+                Q(start_date__lte=finish_date, finish_date__gte=finish_date) |
+                Q(start_date__gte=start_date, finish_date__lte=finish_date)
+            )
+            if overlapping_semesters.exists():
+                raise forms.ValidationError(
+                    "The new semester's dates overlap with an existing semester!!!"
+                )
 
 '''class CreateUserForm(forms.Form):
     first_name = forms.CharField()

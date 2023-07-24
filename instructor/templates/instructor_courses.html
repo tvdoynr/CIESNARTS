@@ -46,17 +46,17 @@
               <ul class="pagination">
                 {% if active_page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ active_page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?active_page={{ active_page_obj.previous_page_number }}">Previous</a>
                   </li>
                 {% endif %}
                 {% for i in active_page_obj.paginator.page_range %}
                   <li class="page-item {% if active_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    <a class="page-link" href="?active_page={{ i }}">{{ i }}</a>
                   </li>
                 {% endfor %}
                 {% if active_page_obj.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ active_page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?active_page={{ active_page_obj.next_page_number }}">Next</a>
                   </li>
                 {% endif %}
               </ul>
@@ -109,17 +109,17 @@
               <ul class="pagination">
                 {% if forum_page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ forum_page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?forum_page={{ forum_page_obj.previous_page_number }}">Previous</a>
                   </li>
                 {% endif %}
                 {% for i in forum_page_obj.paginator.page_range %}
                   <li class="page-item {% if forum_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    <a class="page-link" href="?forum_page={{ i }}">{{ i }}</a>
                   </li>
                 {% endfor %}
                 {% if forum_page_obj.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ forum_page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?forum_page={{ forum_page_obj.next_page_number }}">Next</a>
                   </li>
                 {% endif %}
               </ul>

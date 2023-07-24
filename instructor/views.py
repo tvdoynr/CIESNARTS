@@ -6,9 +6,10 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
-from accounts.models import Section, Profile, Transcript, Grade, Course
+from accounts.models import Section, Profile, Transcript, Grade, Course, Semester
 from .forms import ChangeEmailForm, ChangePasswordForm
 
 
@@ -19,6 +20,7 @@ def user_is_instructor(function):
             return function(request, *args, **kwargs)
         else:
             raise PermissionDenied
+
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
     return wrap
@@ -36,8 +38,12 @@ class InstructorView(View):
 class InstructorCoursesView(View):
     def get(self, request):
         instructor = User.objects.get(pk=request.user.pk)
-        active_courses = Section.objects.filter(Instructor=instructor).order_by('course__CourseID')
-        enrolled_courses = Course.objects.filter(sections__Instructor=instructor).order_by('CourseID')
+
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
+
+        active_courses = Section.objects.filter(Instructor=instructor, course__semester=semester).order_by('course__course_id')
+        enrolled_courses = Course.objects.filter(sections__Instructor=instructor).order_by('course_id')
 
         paginator_active_page = Paginator(active_courses, 5)
         paginator_forum_page = Paginator(enrolled_courses, 5)
@@ -89,16 +95,30 @@ class InstructorGradeView(View):
 
         try:
             for student_id, grade in zip(student_ids, grades):
+                if float(grade) < 0 or float(grade) > 100:
+                    messages.success(request, "Grade should be between 0 and 100")
+                    return redirect(reverse("InstructorGradesPage", args=section_id))
                 student = Profile.objects.get(pk=student_id)
 
                 transcript, created = Transcript.objects.get_or_create(student=student)
 
-                grade = Grade.objects.create(
-                    transcript=transcript,
-                    course=section.course,
-                    instructor=request.user,
-                    value=float(grade))
-                grade.save()
+                if Grade.objects.filter(transcript=transcript,
+                                        course=section.course,
+                                        instructor=request.user,
+                                        ):
+                    grade_obj = Grade.objects.get(transcript=transcript,
+                                                  course=section.course,
+                                                  instructor=request.user,
+                                                  )
+                    grade_obj.value = float(grade)
+                    grade_obj.save()
+                else:
+                    Grade.objects.create(
+                        transcript=transcript,
+                        course=section.course,
+                        instructor=request.user,
+                        value=float(grade))
+
             return redirect(reverse('InstructorCoursesPage'))
         except Exception as e:
             print(str(e))
@@ -157,9 +177,12 @@ class InstructorAccountView(View):
                 user = authenticate(request, username=request.user.id, password=confirm_password)
 
                 if user is not None:
-                    request.user.email = new_email_address
-                    request.user.save()
-                    messages.success(request, 'The email has been changed successfully')
+                    if User.objects.filter(email=new_email_address).exists():
+                        messages.success(request, "The email has already been taken!")
+                    else:
+                        request.user.email = new_email_address
+                        request.user.save()
+                        messages.success(request, 'The email has been changed successfully')
                 else:
                     messages.success(request, 'The password is wrong!')
 

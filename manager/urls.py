@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
+    path("select2/", include("django_select2.urls")),
     path("", views.ManagerView.as_view(), name="ManagerPage"),
     path("account/", views.ManagerAccountView.as_view(), name="ManagerAccountPage"),
     path("courses/", views.CourseCreateView.as_view(), name="CreateCoursePage"),

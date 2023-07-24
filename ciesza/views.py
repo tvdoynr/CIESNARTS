@@ -113,7 +113,6 @@ class SubmissionView(View):
 
         new_score = submission.score
         return JsonResponse({'new_score': new_score})
-        #return render(request, 'ciesza_submissions.html', context)
 
 
 @method_decorator(login_required, name="dispatch")
@@ -251,8 +250,6 @@ class CommentsView(View):
                 submission.save()
                 new_score = submission.score
             else:
-                print(request.POST)
-                print("2")
                 comment = Comment.objects.get(pk=submission_comment_id)
 
                 vote, created = Vote.objects.get_or_create(comment_id=submission_comment_id, author=author)
@@ -337,8 +334,6 @@ class CieszaProfileView(View):
         return render(request, 'ciesza_profile.html', context)
 
     def post(self, request, course_id, user_id):
-        print(request.POST)
-
         submission_id = request.POST.get("what_id")
         vote_type = request.POST.get("vote_type")
         author_id = request.POST.get("what_user")

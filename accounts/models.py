@@ -27,10 +27,10 @@ class Semester(models.Model):
 
 
 class Course(models.Model):
-    CourseID = models.CharField(max_length=10, unique=True)
-    CourseName = models.CharField(max_length=100)
-    Description = models.TextField()
-    CourseCredit = models.IntegerField()
+    course_id = models.CharField(max_length=10)
+    course_name = models.CharField(max_length=100)
+    description = models.TextField()
+    course_credit = models.IntegerField()
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, null=True)
     is_active = models.BooleanField(default=False)
 
@@ -41,7 +41,7 @@ class Course(models.Model):
         return self.semester.has_started()
 
     def __str__(self):
-        return self.CourseID
+        return self.course_id
 
     def save(self, *args, **kwargs):
         creating_new_course = self.pk is None
@@ -67,7 +67,7 @@ class Section(models.Model):
         section_id = self.id % 3
         if section_id == 0:
             section_id += 3
-        return f'{self.course.CourseID} Section {section_id}'
+        return f'{self.course.course_id} Section {section_id}'
 
 
 class Transcript(models.Model):
@@ -85,5 +85,5 @@ class Grade(models.Model):
 
     def __str__(self):
         return f'Grade for {self.transcript.student.user.first_name} {self.transcript.student.user.last_name} ' \
-               f'in {self.course.CourseID} by {self.instructor.first_name} {self.instructor.last_name}'
+               f'in {self.course.course_id} by {self.instructor.first_name} {self.instructor.last_name}'
 

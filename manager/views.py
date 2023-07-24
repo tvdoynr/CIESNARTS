@@ -8,11 +8,12 @@ from django.core.paginator import Paginator
 from django.forms import formset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.decorators import method_decorator
 from django.views import View
 from .forms import ChangeEmailForm, ChangePasswordForm, CourseForm, SemesterForm, CreateUserForm, SectionForm
-from accounts.models import Course, Profile, Section
+from accounts.models import Course, Profile, Semester
 
 
 def user_is_manager(function):
@@ -51,7 +52,6 @@ class ManagerAccountView(View):
             if password_form.is_valid():
                 current_password = password_form.cleaned_data.get("current_password")
                 new_password = password_form.cleaned_data.get("new_password")
-                new_password_again = password_form.cleaned_data.get("new_password_again")
 
                 user = authenticate(request, username=request.user.username, password=current_password)
 
@@ -92,7 +92,11 @@ class ManagerAccountView(View):
 class CourseCreateView(View):
     def get(self, request, *args, **kwargs):
         course_create_form = CourseForm()
-        courses = Course.objects.all().order_by("CourseID")
+
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
+
+        courses = Course.objects.filter(semester=semester).order_by("course_id")
 
         paginator = Paginator(courses, 5)
         page_number = request.GET.get('page')
@@ -111,7 +115,7 @@ class CourseCreateView(View):
             else:
                 messages.error(request, 'The semester has either not started or has already ended.')
 
-        courses = Course.objects.all().order_by("CourseID")
+        courses = Course.objects.all().order_by("course_id")
         paginator = Paginator(courses, 5)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -143,7 +147,9 @@ class AddUserView(View):
                 password = get_random_string(length=16)
 
                 if User.objects.filter(id=id).exists():
-                    messages.success(request, "There is already user in db")
+                    messages.success(request, "There is already user!")
+                elif User.objects.filter(email=email).exists():
+                    messages.success(request, "The email has already been taken!")
                 else:
                     user = User.objects.create_user(id=id,
                                                     username=id,

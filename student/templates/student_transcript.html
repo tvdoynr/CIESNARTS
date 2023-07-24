@@ -5,20 +5,35 @@
     <div class="row">
         <div class="col-md-6 offset-md-3">
             <h2 class="text-center">Transcript for {{ student.user.first_name }} {{ student.user.last_name }}</h2>
-            <table class="table mt-4">
+            <div class="form-group">
+                <label for="semester">Select Semester:</label>
+                <select id="semester" class="semester-select">
+                    {% for semester in semesters %}
+                        <option value="{{ semester.id }}" {% if semester.id == default_semester_id %}selected{% endif %}>{{ semester.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <table class="table mt-4" id="transcript-table">
                 <thead>
                     <tr>
                         <th scope="col">Course ID</th>
                         <th scope="col">Instructor</th>
                         <th scope="col">Grade</th>
+                        <th scope="col">Credit</th>
                     </tr>
                 </thead>
                 <tbody>
-                {% for grade in grades %}
+                {% for grade, letter_grade in semester_final_grades %}
                     <tr>
-                        <td>{{ grade.course.CourseID }}</td>
+                        <td>{{ grade.course.course_id }}</td>
                         <td>{{ grade.instructor.first_name }} {{ grade.instructor.last_name }}</td>
-                        <td>{{ grade.value }}</td>
+                        {% if letter_grade == "F" %}
+                            <td style="color: red">{{ letter_grade }}</td>
+                        {% else %}
+                            <td>{{ letter_grade }}</td>
+                        {% endif %}
+
+                        <td>{{ grade.course_credit }}</td>
                     </tr>
                 {% empty %}
                     <tr>
@@ -27,7 +42,44 @@
                 {% endfor %}
                 </tbody>
             </table>
+            <hr>
+            <div class="text-left mt-2">
+                <p id="semester-gpa">Semester's GPA: <strong>{{ semester_gpa }}</strong></p>
+                <p>Total GPA: <strong>{{ total_gpa }}</strong></p>
+            </div>
         </div>
     </div>
 </div>
+
+    <script>
+    $(document).ready(function() {
+        $(document).ready(function (){
+            $('.semester-select').select2();
+        });
+
+        $("#semester").change(function() {
+            var selectedSemester = $(this).val();
+            $.ajax({
+                type: 'post',
+                data: {
+                    'semester_id': selectedSemester,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (data) {
+                    $("#transcript-table tbody").empty();
+                    data.semester_final_grades.forEach(function(grade) {
+                        var row = `<tr>
+                            <td>${grade.course_id}</td>
+                            <td>${grade.instructor}</td>
+                            <td ${grade.letter_grade === "F" ? 'style="color:red"': ''}>${grade.letter_grade}</td>
+                            <td>${grade.course_credit}</td>
+                        </tr>`;
+                        $("#transcript-table tbody").append(row);
+                    });
+                    $('#semester-gpa').html(`Semester's GPA: <strong>${data.semester_gpa}</strong>`);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

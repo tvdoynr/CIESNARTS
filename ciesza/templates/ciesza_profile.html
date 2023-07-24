@@ -62,9 +62,8 @@
     <div class="col-md-4">
         <h1> Profile </h1>
         <div>
-            <h3> Score: {{ author.score }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <h3> Score: <span id="author-score">{{ author.score }}</span>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 {% if user_id == request.user.id %}
                 <a href="{% url 'CieszaProfileEditPage' user_id=user_id course_id=course_id %}"><i class="fas fa-cog" href></i></a>
                 {% endif %}
@@ -73,7 +72,7 @@
             {% for course in courses %}
                 <li>
                 <label>
-                    {{ course.CourseID }} - {{ course.CourseName }}
+                    {{ course.course_id }} - {{ course.course_name }}
                 </label>
                 </li>
             {% endfor %}
@@ -102,7 +101,7 @@
                 success: function(response) {
                     // Update the vote count on the page, depending on the response from the server
                     $(element).parent().parent().find('.score').html(response.new_score);
-                    $('#author-score').html('Score: ' + response.author_score);
+                    $('#author-score').html(response.author_score);
 
                     console.log(response.new_score)
 

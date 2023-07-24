@@ -1,4 +1,5 @@
 {% extends 'manager_base.html' %}
+{% load widget_tweaks %}
 
 {% block content %}
   <div class="container">
@@ -17,13 +18,13 @@
                 <div class="fieldWrapper">
                     {{ form.Classroom.errors }}
                     <label for="{{ form.Classroom.id_for_label }}">Classroom:</label>
-                    {{ form.Classroom }}
+                    {{ form.Classroom|add_class:"form-control" }}
                 </div>
                 <br>
                 <div class="fieldWrapper">
                     {{ form.Instructor.errors }}
                     <label for="{{ form.Instructor.id_for_label }}">Instructors :</label>
-                    {{ form.Instructor }}
+                    {{ form.Instructor|add_class:"instructor_select2" }}
                 </div>
 
             </div>
@@ -38,4 +39,12 @@
       </div>
     </form>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.instructor_select2').select2();
+    });
+</script>
 {% endblock %}

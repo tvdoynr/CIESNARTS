@@ -57,8 +57,9 @@ class RegistrationView(View):
             password = get_random_string(length=16)
 
             if User.objects.filter(id=id).exists():
-                messages.success(request, "There is already user in db")
-                print("There is already user in db")
+                messages.success(request, "There is already user!")
+            elif User.objects.filter(email=email).exists():
+                messages.success(request, "The email has already been taken!")
             else:
                 user = User.objects.create_user(id=id,
                                                 username=id,

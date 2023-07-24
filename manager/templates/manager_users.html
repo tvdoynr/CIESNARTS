@@ -7,7 +7,7 @@
           <h2>Add a new User</h2>
           <form method="post">
             {% csrf_token %}
-
+            {{ form.media }}
             {{ form.non_field_errors }}
 
             <div class="fieldWrapper">
