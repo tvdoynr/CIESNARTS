@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import F
+from django.db.models import F, Case, When, Value, BooleanField
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -98,7 +98,13 @@ class StudentCourseView(View):
         semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
 
         active_courses = Course.objects.filter(is_active=True, semester=semester).order_by("course_id")
-        enrolled_courses = Course.objects.filter(sections__students=student).order_by("course_id")
+        enrolled_courses = Course.objects.filter(sections__students=student).annotate(
+            is_current_semester=Case(
+                When(semester=semester, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+        ).order_by("-is_current_semester", "course_id")
 
         active_courses = [course for course in active_courses if not course.is_student_enrolled(student)]
 
@@ -114,6 +120,7 @@ class StudentCourseView(View):
         context = {
             'can_enroll_page_obj': can_enroll_page_obj,
             'enrolled_page_obj': enrolled_page_obj,
+            'semester': semester,
         }
         return render(request, 'student_courses.html', context)
 

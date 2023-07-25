@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 class LoginForm(forms.Form):
     id = forms.CharField(
         max_length=10,
+        widget=forms.TextInput(attrs={'style':'max-width:385px'}),
         validators=[
             RegexValidator(
                 regex='^[0-9]*$',
@@ -13,7 +14,7 @@ class LoginForm(forms.Form):
             ),
         ]
     )
-    password = forms.CharField(widget=forms.PasswordInput)
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'style': 'max-width:385px'}))
 
 
 class RegistrationForm(forms.Form):

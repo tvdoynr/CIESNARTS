@@ -2,24 +2,36 @@
 
 {% block content %}
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-6" style="margin-top: 2%">
 
           <h3>Active Courses</h3>
-                  <ul>
-                    {% for can_enroll_course in can_enroll_page_obj %}
-                      <li>
-                        <label>
-                          {{ can_enroll_course.course_id }}  {{ can_enroll_course.course_name }}
-                            <input type="radio" name="can_enroll_course" value="{{ can_enroll_course.pk }}">
-                        </label>
-                      </li>
-                      <br>
-                    {% empty %}
-                      <li>There is no course.</li>
-                    {% endfor %}
-                  </ul>
-
-                  <button type="submit" id="can-enroll-button" name="piazza" class="btn btn-sm btn-primary" disabled>Enroll</button>
+                  <table class="table mt-4">
+                    <thead>
+                      <tr>
+                        <th style="color: #032D23; font-family: Playfair Display; font-size: 22px" scope="col">Course ID</th>
+                        <th style="color: #032D23; font-family: Playfair Display; font-size: 22px; padding-left: 10%" scope="col">Course Name</th>
+                        <th style="color: #032D23; font-family: Playfair Display; font-size: 22px" scope="col">Course Credit</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for can_enroll_course in can_enroll_page_obj %}
+                        <tr>
+                          <td style="text-align: center; vertical-align: middle">{{ can_enroll_course.course_id }}</td>
+                          <td style="text-align: center;vertical-align: middle;padding-left: 10%">{{ can_enroll_course.course_name }}</td>
+                          <td style="text-align: center; vertical-align: middle">{{ can_enroll_course.course_credit }}</td>
+                          <td>
+                            <input type="radio" name="can_enroll_course" style="margin-top: 19px" value="{{ can_enroll_course.pk }}">
+                          </td>
+                        </tr>
+                      {% empty %}
+                        <tr><td colspan="4">There is no course.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                  <hr>
+                  <button type="submit" id="can-enroll-button" name="piazza"  style="width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Enroll</button>
 
               <script>
                     const can_enroll_radio = document.querySelectorAll('input[name="can_enroll_course"]');
@@ -46,17 +58,17 @@
               <ul class="pagination">
                 {% if can_enroll_page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?enrolled_page={{ can_enroll_page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?can_enroll_page={{ can_enroll_page_obj.previous_page_number }}">Previous</a>
                   </li>
                 {% endif %}
                 {% for i in can_enroll_page_obj.paginator.page_range %}
                   <li class="page-item {% if can_enroll_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?enrolled_page={{ i }}">{{ i }}</a>
+                    <a class="page-link" href="?can_enroll_page={{ i }}">{{ i }}</a>
                   </li>
                 {% endfor %}
                 {% if can_enroll_page_obj.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="?enrolled_page={{ can_enroll_page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?can_enroll_page={{ can_enroll_page_obj.next_page_number }}">Next</a>
                   </li>
                 {% endif %}
               </ul>
@@ -64,24 +76,28 @@
 
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-6" style="margin-top: 3%; margin-left: 0%">
             <h3> Enrolled Courses </h3>
-            <ul>
+            <ul> <!-- padding inline start default 40px maybe 15px should be -->
 
                 {% for enrolled_course in enrolled_page_obj %}
-                    <li>
+
                         <label>
-                            {{ enrolled_course.course_id }}  {{ enrolled_course.course_name }}
+                        {% if enrolled_course.semester != semester %}(inactive){% endif %}
+                        <span style="font-weight: bold">{{ enrolled_course.course_id }}</span>
+                            {{ enrolled_course.course_name }}
+                            <span style="color: #aaa">[{{ enrolled_course.semester }}]</span>
                             <input type="radio" name="enrolled_course" value="{{ enrolled_course.pk }}">
                         </label>
-                      </li>
+                      <br>
                 {% empty %}
                     <li>There is no course.</li>
                 {% endfor %}
 
                 </ul>
 
-                <button type="submit" id="enrolled-button" name="enroll" class="btn btn-sm btn-primary" disabled>Ciesza</button>
+                <button type="submit" id="enrolled-button" name="enroll" style="width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Ciesza</button>
 
                 <script>
                     const enrolled_radio = document.querySelectorAll('input[name="enrolled_course"]');
@@ -108,17 +124,17 @@
               <ul class="pagination">
                 {% if enrolled_page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?can_enroll_page={{ enrolled_page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?enrolled_page={{ enrolled_page_obj.previous_page_number }}">Previous</a>
                   </li>
                 {% endif %}
                 {% for i in enrolled_page_obj.paginator.page_range %}
                   <li class="page-item {% if enrolled_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?can_enroll_page={{ i }}">{{ i }}</a>
+                    <a class="page-link" href="?enrolled_page={{ i }}">{{ i }}</a>
                   </li>
                 {% endfor %}
                 {% if enrolled_page_obj.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="?can_enroll_page={{ enrolled_page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?enrolled_page={{ enrolled_page_obj.next_page_number }}" style="font-family: Inter; color: #032D23">Next</a>
                   </li>
                 {% endif %}
               </ul>
