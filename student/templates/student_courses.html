@@ -78,21 +78,21 @@
 
         <div class="col-md-6" style="margin-top: 3%; margin-left: 0%">
             <h3> Enrolled Courses </h3>
-            <ul> <!-- padding inline start default 40px maybe 15px should be -->
+                <ul> <!-- padding inline start default 40px maybe 15px should be -->
 
-                {% for enrolled_course in enrolled_page_obj %}
+                    {% for enrolled_course in enrolled_page_obj %}
 
                         <label>
-                        {% if enrolled_course.semester != semester %}(inactive){% endif %}
-                        <span style="font-weight: bold">{{ enrolled_course.course_id }}</span>
+                            {% if enrolled_course.semester != semester %}(inactive){% endif %}
+                            <span style="font-weight: bold">{{ enrolled_course.course_id }}</span>
                             {{ enrolled_course.course_name }}
                             <span style="color: #aaa">[{{ enrolled_course.semester }}]</span>
                             <input type="radio" name="enrolled_course" value="{{ enrolled_course.pk }}">
                         </label>
                       <br>
-                {% empty %}
-                    <li>There is no course.</li>
-                {% endfor %}
+                    {% empty %}
+                        <li>There is no course.</li>
+                    {% endfor %}
 
                 </ul>
 

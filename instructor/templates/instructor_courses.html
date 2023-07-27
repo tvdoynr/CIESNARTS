@@ -2,9 +2,60 @@
 
 {% block content %}
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-6" style="margin-top: 3%">
 
           <h3>Active Courses</h3>
+
+        <div style="margin-top: 5%; width: 464px; height: 406px; border-radius: 8px; overflow: hidden; border: 0.50px #EEEEEE solid; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: inline-flex">
+            {% for can_enroll_course in active_page_obj %}
+
+                    <div class="courses" data-id="{{ can_enroll_course.pk }}">
+                        <div class="courses-inline">
+                            <div class="courses-name">{{ can_enroll_course }}</div>
+                            <div class="courses-classroom">Classroom: {{ can_enroll_course.Classroom }}</div>
+                        </div>
+                    </div>
+                    <div style="width: 657px; height: 1px; background: #EEEEEE"></div>
+            {% empty %}
+                <li> There is no course.</li>
+            {% endfor %}
+        </div>
+
+        <button id="grades-button" style="width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal; display: none">Grades</button>
+
+        <script>
+            const courseDivs = document.querySelectorAll('.courses');
+            const gradesButton = document.getElementById('grades-button');
+
+            function clearActiveClasses() {
+                courseDivs.forEach((div) => {
+                    div.classList.remove('active');
+                    div.querySelector('.courses-name').classList.remove('active');
+                    div.querySelector('.courses-classroom').classList.remove('active');
+                    div.querySelector('.courses-inline').classList.remove('active');
+                });
+            }
+
+            courseDivs.forEach((div) => {
+                div.addEventListener('click', () => {
+                    clearActiveClasses();
+                    div.classList.add('active');
+                    div.querySelector('.courses-name').classList.add('active');
+                    div.querySelector('.courses-classroom').classList.add('active');
+                    div.querySelector('.courses-inline').classList.add('active');
+
+                    gradesButton.style.display = 'block'; // Display the button
+                    gradesButton.onclick = () => { // Assign a function to handle button click event
+                        window.location.href = `/instructor/section/${div.getAttribute('data-id')}/grades/`;
+                    };
+                });
+            });
+        </script>
+
+
+
+        <!--
                   <ul>
                     {% for can_enroll_course in active_page_obj %}
                       <li>
@@ -19,7 +70,8 @@
                     {% endfor %}
                   </ul>
 
-                  <button type="submit" id="can-enroll-button" name="piazza" class="btn btn-sm btn-primary" disabled>Grades</button>
+                  <button type="submit" id="can-enroll-button" name="piazza" style="width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Grades</button>
 
               <script>
                     const can_enroll_radio = document.querySelectorAll('input[name="can_enroll_course"]');
@@ -39,7 +91,7 @@
                         window.location.href = can_enrollURL;
                     });
             </script>
-
+        -->
             <br>
             <br>
             <nav aria-label="Page navigation">
@@ -64,43 +116,45 @@
 
         </div>
 
-        <div class="col-md-6">
-            <h3> Forum </h3>
-            <ul>
+        <div class="col-md-6" style="margin-top: 3%; padding-left: 3%">
+            <h3> Ciesza </h3>
+            <ul style="margin-top: 5%"> <!-- padding inline start default 40px maybe 15px should be -->
 
                 {% for enrolled_course in forum_page_obj %}
-                    <li>
-                        <label>
-                            {{ enrolled_course }}
-                            <input type="radio" name="enrolled_course" value="{{ enrolled_course.pk }}">
-                        </label>
-                      </li>
-                    <br>
+
+                    <label>
+                        {% if enrolled_course.semester != semester %}(inactive){% endif %}
+                        <span style="font-weight: bold">{{ enrolled_course.course_id }}</span>
+                        {{ enrolled_course.course_name }}
+                        <span style="color: #aaa">[{{ enrolled_course.semester }}]</span>
+                        <input type="radio" name="enrolled_course" value="{{ enrolled_course.pk }}">
+                    </label>
+                  <br>
                 {% empty %}
                     <li>There is no course.</li>
                 {% endfor %}
 
-                </ul>
+            </ul>
+            <button type="submit" id="enrolled-button" name="enroll" style="width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Ciesza</button>
 
-                <button type="submit" id="enrolled-button" name="enroll" class="btn btn-sm btn-primary" disabled>Ciesza</button>
+            <script>
+                const enrolled_radio = document.querySelectorAll('input[name="enrolled_course"]');
+                const enrolled_button = document.getElementById('enrolled-button');
 
-                <script>
-                    const enrolled_radio = document.querySelectorAll('input[name="enrolled_course"]');
-                    const enrolled_button = document.getElementById('enrolled-button');
-
-                    enrolled_radio.forEach((radio) => {
-                        radio.addEventListener('change', () => {
-                            const anyRadioChecked = [...enrolled_radio].some((radio) => radio.checked);
-                            enrolled_button.disabled = !anyRadioChecked;
-                        });
+                enrolled_radio.forEach((radio) => {
+                    radio.addEventListener('change', () => {
+                        const anyRadioChecked = [...enrolled_radio].some((radio) => radio.checked);
+                        enrolled_button.disabled = !anyRadioChecked;
                     });
+                });
 
-                    enrolled_button.addEventListener('click', () => {
-                        const enrolled_course = [...enrolled_radio].find((radio) => radio.checked).value;
+                enrolled_button.addEventListener('click', () => {
+                    const enrolled_course = [...enrolled_radio].find((radio) => radio.checked).value;
 
-                        const enrolled_URL = `/ciesza/submissions/${enrolled_course}/`;
-                        window.location.href = enrolled_URL;
-                    });
+                    const enrolled_URL = `/ciesza/submissions/${enrolled_course}/`;
+                    window.location.href = enrolled_URL;
+                });
             </script>
 
             <br>

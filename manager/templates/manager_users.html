@@ -1,4 +1,5 @@
 {% extends 'manager_base.html' %}
+{% load crispy_forms_filters %}
 
 {% block content %}
     <div class="row">
@@ -7,38 +8,7 @@
           <h2>Add a new User</h2>
           <form method="post">
             {% csrf_token %}
-            {{ form.media }}
-            {{ form.non_field_errors }}
-
-            <div class="fieldWrapper">
-              {{ form.first_name.errors }}
-              <label for="{{ form.first_name.id_for_label }}">First Name:</label>
-              {{ form.first_name }}
-            </div>
-
-            <div class="fieldWrapper">
-              {{ form.last_name.errors }}
-              <label for="{{ form.last_name.id_for_label }}">Last Name:</label>
-              {{ form.last_name }}
-            </div>
-
-            <div class="fieldWrapper">
-              {{ form.id.errors }}
-              <label for="{{ form.id.id_for_label }}">Id:</label>
-              {{ form.id }}
-            </div>
-
-            <div class="fieldWrapper">
-              {{ form.email.errors }}
-              <label for="{{ form.email.id_for_label }}">Email:</label>
-              {{ form.email }}
-            </div>
-
-            <div class="fieldWrapper">
-              {{ form.user_type.errors }}
-              <label for="{{ form.user_type.id_for_label }}">User Role:</label>
-              {{ form.user_type }}
-            </div>
+            {{ form|crispy }}
 
             <button type="submit" name="add_user">Add User</button>
           </form>
@@ -72,8 +42,10 @@
                     {% endfor %}
                   </ul>
 
-                  <button type="submit" id="edit-button" name="enroll" class="btn btn-sm btn-primary" disabled>Enroll</button>
-                  <button type="submit" id="delete-button" name="delete" class="btn btn-sm btn-primary" disabled>Delete</button>
+                  <button type="submit" id="edit-button" name="enroll" style="width: 52px; height: 30px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Enroll</button>
+                  <button type="submit" id="delete-button" onclick="return confirm('Are you sure you want to delete?');" name="delete" style="width: 52px; height: 30px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Delete</button>
                 </form>
               <script>
                 const checkboxes = document.querySelectorAll('input[name="selected_students"]');
@@ -87,6 +59,12 @@
                     editButton.disabled = !anyCheckboxChecked;
                   });
                 });
+
+                delButton.onclick = function() {
+                  const anyCheckboxChecked = [...checkboxes].some((checkbox) => checkbox.checked);
+                  return anyCheckboxChecked && confirm('Are you sure you want to delete?');
+};
+
               </script>
 
             <br>

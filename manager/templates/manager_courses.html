@@ -1,5 +1,6 @@
 {% extends 'manager_base.html' %}
 {% load widget_tweaks %}
+{% load crispy_forms_filters %}
 
 {% block content %}
     <div class="row">
@@ -13,13 +14,13 @@
         <div class="fieldWrapper">
           {{ form.course_id.errors }}
           <label for="{{ form.course_id.id_for_label }}">Course ID:</label>
-          {{ form.course_id }}
+          {{ form.course_id|add_class:"textinput form-control" }}
         </div>
 
         <div class="fieldWrapper">
           {{ form.course_name.errors }}
           <label for="{{ form.course_name.id_for_label }}">Course Name:</label>
-          {{ form.course_name }}
+          {{ form.course_name|add_class:"textinput form-control" }}
         </div>
 
         <div class="fieldWrapper">
@@ -31,16 +32,18 @@
         <div class="fieldWrapper">
           {{ form.course_credit.errors }}
           <label for="{{ form.course_credit.id_for_label }}">Course Credit:</label>
-          {{ form.course_credit }}
+          {{ form.course_credit|add_class:"textinput form-control" }}
         </div>
 
         <div class="fieldWrapper">
           {{ form.semester.errors }}
           <label for="{{ form.semester.id_for_label }}">Semester:</label>
-          {{ form.semester|add_class:"select2" }}
+          {{ form.semester|add_class:"select2 form-control" }}
         </div>
 
-        <button type="submit">Add course</button>
+          <br>
+        <button type="submit" style="width: 105px; height: 44px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 16px; font-style: normal">Add course</button>
       </form>
 
         {% if messages %}
@@ -68,7 +71,8 @@
                 {% endfor %}
               </ul>
 
-              <button type="submit" id="edit-button" name="edit_course" class="btn btn-sm btn-primary" disabled>Edit Selected Course</button>
+              <button type="submit" id="edit-button" name="edit_course" style="width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Edit Selected Course</button>
 
               <script>
                   $(document).ready(function() {

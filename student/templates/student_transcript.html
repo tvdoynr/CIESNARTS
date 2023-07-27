@@ -67,16 +67,24 @@
                 },
                 success: function (data) {
                     $("#transcript-table tbody").empty();
-                    data.semester_final_grades.forEach(function(grade) {
+                    if (data.semester_final_grades.length > 0) {
+                        data.semester_final_grades.forEach(function(grade) {
+                            var row = `<tr>
+                                <td>${grade.course_id}</td>
+                                <td>${grade.instructor}</td>
+                                <td ${grade.letter_grade === "F" ? 'style="color:red"': ''}>${grade.letter_grade}</td>
+                                <td>${grade.course_credit}</td>
+                            </tr>`;
+                            $("#transcript-table tbody").append(row);
+                        });
+                        $('#semester-gpa').html(`Semester's GPA: <strong>${data.semester_gpa}</strong>`);
+                    } else {
                         var row = `<tr>
-                            <td>${grade.course_id}</td>
-                            <td>${grade.instructor}</td>
-                            <td ${grade.letter_grade === "F" ? 'style="color:red"': ''}>${grade.letter_grade}</td>
-                            <td>${grade.course_credit}</td>
+                            <td colspan="3" class="text-center">No grades available.</td>
                         </tr>`;
                         $("#transcript-table tbody").append(row);
-                    });
-                    $('#semester-gpa').html(`Semester's GPA: <strong>${data.semester_gpa}</strong>`);
+                        $('#semester-gpa').html(`Semester's GPA: <strong>${data.semester_gpa}</strong>`);
+                    }
                 }
             });
         });

@@ -2,16 +2,16 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-6">
-        <h3>Grades for {{ section }}</h3>
+    <div class="col-md-6 mx-auto">
+        <h1 class="text-center" style="color: #032D23; font-family: Playfair Display; font-size: 40px; margin-top: 4%">Grades for {{ section }}</h1>
         <form method="POST" action="">
             {% csrf_token %}
-            <table class="table">
+            <table class="table" style="margin-top: 10%">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Student</th>
-                        <th scope="col">Grade</th>
+                        <th style="color: #032D23; font-family: Playfair Display; font-size: 18px" scope="col">#</th>
+                        <th style="color: #032D23; font-family: Playfair Display; font-size: 18px" scope="col">Student</th>
+                        <th style="color: #032D23; font-family: Playfair Display; font-size: 18px" scope="col">Grade</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -20,14 +20,15 @@
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>{{ student.user.first_name }} {{ student.user.last_name }}</td>
                         <td>
-                            <input type="number" name="grades[]" value="{{ student.grade }}">
+                            <input type="number" name="grades[]" class="textinput form-control" value="{{ student.grade }}">
                             <input type="hidden" name="student_ids[]" value="{{ student.id }}">
                         </td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
-            <button type="submit" class="btn btn-primary">Submit Grades</button>
+            <button type="submit" style="width:129px; height: 38px ; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal">Submit Grades</button>
         </form>
 
         <br><br>
@@ -53,4 +54,11 @@
 
     </div>
 </div>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endblock %}

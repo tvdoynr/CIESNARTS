@@ -10,7 +10,9 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from accounts.models import Section, Profile, Transcript, Grade, Course, Semester
+from announcements import get_announcements
 from .forms import ChangeEmailForm, ChangePasswordForm
+from django.db.models import Case, When, Value, BooleanField
 
 
 def user_is_instructor(function):
@@ -30,7 +32,25 @@ def user_is_instructor(function):
 @method_decorator(user_is_instructor, name="dispatch")
 class InstructorView(View):
     def get(self, request):
-        return render(request, "instructor_dashboard.html")
+        cs_announcements = get_announcements()
+
+        announcements_paginator_page = Paginator(cs_announcements, 4)
+        announcements_page_number = request.GET.get('page')
+        announcements_obj = announcements_paginator_page.get_page(announcements_page_number)
+
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
+
+        total_length = semester.semester_length()
+        elapsed_length = semester.elapsed_days()
+        percentage_complete = min(100, max(0, (elapsed_length / total_length) * 100))
+
+        context = {
+            'announcements_obj': announcements_obj,
+            'percentage_complete': percentage_complete,
+            'semester': semester,
+        }
+        return render(request, "instructor_dashboard.html", context)
 
 
 @method_decorator(login_required, name="dispatch")
@@ -42,8 +62,15 @@ class InstructorCoursesView(View):
         current_date = timezone.now().date()
         semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
 
-        active_courses = Section.objects.filter(Instructor=instructor, course__semester=semester).order_by('course__course_id')
-        enrolled_courses = Course.objects.filter(sections__Instructor=instructor).order_by('course_id')
+        active_courses = Section.objects.filter(Instructor=instructor,
+                                                course__semester=semester).order_by('course__course_id')
+        enrolled_courses = Course.objects.filter(sections__Instructor=instructor).annotate(
+            is_current_semester=Case(
+                When(semester=semester, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+        ).order_by("-is_current_semester", "course_id")
 
         paginator_active_page = Paginator(active_courses, 5)
         paginator_forum_page = Paginator(enrolled_courses, 5)
@@ -56,7 +83,8 @@ class InstructorCoursesView(View):
 
         context = {
             'active_page_obj': active_page_obj,
-            'forum_page_obj': forum_page_obj
+            'forum_page_obj': forum_page_obj,
+            'semester': semester,
         }
 
         return render(request, 'instructor_courses.html', context)

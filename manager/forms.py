@@ -4,14 +4,21 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from ckeditor.widgets import CKEditorWidget
 from django.db.models import Q
+from django.forms import TextInput
 
 from accounts.models import Course, Semester, Profile, Section
 
 
 class ChangePasswordForm(forms.Form):
-    current_password = forms.CharField(max_length=16, widget=forms.PasswordInput)
-    new_password = forms.CharField(max_length=16, widget=forms.PasswordInput)
-    new_password_again = forms.CharField(max_length=16, widget=forms.PasswordInput)
+    current_password = forms.CharField(max_length=16, widget=forms.PasswordInput(
+        attrs={'style': 'max-width: 385px'}
+    ))
+    new_password = forms.CharField(max_length=16, widget=forms.PasswordInput(
+        attrs={'style': 'max-width: 385px'}
+    ))
+    new_password_again = forms.CharField(max_length=16, widget=forms.PasswordInput(
+        attrs={'style': 'max-width: 385px'}
+    ))
 
     def clean(self):
         cleaned_data = super().clean()
@@ -24,11 +31,16 @@ class ChangePasswordForm(forms.Form):
 
 class ChangeEmailForm(forms.Form):
     new_email_address = forms.EmailField(
+        widget=forms.TextInput(
+            attrs={'style': 'max-width: 385px'}
+        ),
         error_messages={
             'invalid': 'The email format is invalid.',
         }
     )
-    confirm_password = forms.CharField(max_length=16, widget=forms.PasswordInput)
+    confirm_password = forms.CharField(max_length=16, widget=forms.PasswordInput(
+        attrs={'style': 'max-width: 385px'}
+    ))
 
 
 class CreateUserForm(forms.Form):
@@ -86,8 +98,14 @@ class SemesterForm(forms.ModelForm):
         model = Semester
         fields = ['name', 'start_date', 'finish_date']
         widgets = {
-            'start_date': DateInput(),
-            'finish_date': DateInput(),
+            'name': TextInput(
+                attrs={'style':'max-width: 215px'}
+            ),
+            'start_date': DateInput(
+                attrs={'style':'max-width: 215px'}
+            ),
+            'finish_date': DateInput(
+                attrs={'style':'max-width: 215px'}),
         }
 
     def clean(self):

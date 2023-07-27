@@ -22,6 +22,12 @@ class Semester(models.Model):
         current_date = timezone.now().date()
         return self.start_date <= current_date <= self.finish_date
 
+    def semester_length(self):
+        return (self.finish_date - self.start_date).days
+
+    def elapsed_days(self):
+        return (timezone.now().date() - self.start_date).days
+
     def __str__(self):
         return self.name
 

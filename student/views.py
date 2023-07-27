@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
+from announcements import get_announcements
 
 from accounts.models import Course, Section, Profile, Grade, Semester
 from .forms import ChangeEmailForm, ChangePasswordForm
@@ -34,7 +35,26 @@ def user_is_student(function):
 @method_decorator(user_is_student, name="dispatch")
 class StudentView(View):
     def get(self, request):
-        return render(request, "student_dashboard.html")
+        cs_announcements = get_announcements()
+
+        announcements_paginator_page = Paginator(cs_announcements, 4)
+        announcements_page_number = request.GET.get('page')
+        announcements_obj = announcements_paginator_page.get_page(announcements_page_number)
+
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
+
+        total_length = semester.semester_length()
+        elapsed_length = semester.elapsed_days()
+        percentage_complete = min(100, max(0, (elapsed_length / total_length) * 100))
+
+        context = {
+            'announcements_obj': announcements_obj,
+            'percentage_complete': percentage_complete,
+            'semester': semester,
+        }
+
+        return render(request, "student_dashboard.html", context)
 
 
 @method_decorator(login_required, name="dispatch")

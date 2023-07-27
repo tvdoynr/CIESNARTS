@@ -1,8 +1,67 @@
 {% extends 'instructor_base.html' %}
-
-{% block title %}Dashboard{% endblock %}
-
+{% load humanize %}
 {% block content %}
-    <h1>Dashboard</h1>
-    <p> Hello xd </p>
+<div class="row">
+    <div class="col-md-6" style="margin-top: 4%">
+        <h2 class="text-center" style="color: #032D23; font-family: Playfair Display; font-size: 40px">Instructor Profile</h2>
+        <div class="card mx-auto" style="width: 18rem;">
+            <img src="../../media/images/herhangi_bir_adam.png" class="card-img-top" alt="{{ request.user.first_name }} {{ request.user.last_name }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ request.user.first_name }} {{ request.user.last_name }}</h5>
+                <p class="card-text">Instructor</p>
+
+            </div>
+        </div>
+        <div style="width: 526px; height: 61px; justify-content: center; align-items: center; gap: 50px; display: inline-flex">
+            <div style="width: 162px; color: black; font-size: 23px; font-family: Inter; font-weight: 500; word-wrap: break-word">{{ semester.start_date|naturalday }}</div>
+          <div style="width: 97px; text-align: center; color: black; font-size: 20px; font-family: Inter; font-weight: 700; word-wrap: break-word">Semester</div>
+          <div style="width: 162px; text-align: right; color: black; font-size: 23px; font-family: Inter; font-weight: 500; word-wrap: break-word">{{ semester.finish_date|naturalday }}</div>
+        </div>
+        <div style="width: 526px; height: 21.96px; background: rgba(67, 151, 67, 0.20); border-radius: 6px">
+            <div style="width: {{ percentage_complete }}%; height: 21.96px; background: #032D23; border-radius: 6px"></div>
+        </div>
+
+    </div>
+
+    <div class="col-md-6" style="margin-top: 4%">
+        <h2 class="text-center" style="color: #032D23; font-family: Playfair Display; font-size: 40px">Announcements</h2>
+        <ul class="list-group">
+            {% for announcement in announcements_obj %}
+                <li class="list-group-item">
+                    <h6>{{ announcement.title|safe }}</h6>
+                    <p>{{ announcement.content|safe }}</p>
+                    {% if announcement.url %}
+                        <a href="{{ announcement.url }}" target="_blank" style="color: #439743">Read more</a>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li class="list-group-item">No announcements available.</li>
+            {% endfor %}
+        </ul>
+
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if announcements_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ announcements_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            {% for i in announcements_obj.paginator.page_range %}
+            <li class="page-item {% if announcements_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+            </li>
+            {% endfor %}
+            {% if announcements_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ announcements_obj.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    </div>
+</div>
+
+
+
 {% endblock %}
