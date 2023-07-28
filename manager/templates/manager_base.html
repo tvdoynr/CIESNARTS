@@ -15,6 +15,48 @@
             font-family: Inter;
             color: #032D23;
         }
+        .enroll-user {
+            background: white; justify-content: flex-start;
+            align-items: flex-start; display: inline-flex
+        }
+        .enroll-user.active{
+            background: #439743; justify-content: flex-start;
+            align-items: flex-start; display: inline-flex
+        }
+        .enroll-user-value-inline {
+            padding-left: 24px; padding-right: 24px; padding-top: 16px; padding-bottom: 16px;
+            justify-content: center; align-items: center; gap: 10px; display: flex
+        }
+        .enroll-user-value-inline.active{
+            padding-left: 24px; padding-right: 24px; padding-top: 16px; padding-bottom: 16px;
+            justify-content: flex-start; align-items: center; gap: 10px; display: flex
+        }
+        .enroll-user-counter {
+            width: 41px; color: black; font-size: 16px; font-family: Inter;
+            font-weight: 500; line-height: 28px; word-wrap: break-word
+        }
+        .enroll-user-name {
+            width: 120px; color: #232D42; font-size: 16px; font-family: Inter;
+            font-weight: 400; line-height: 28px; word-wrap: break-word
+        }
+        .enroll-user-name.active {
+            color: white;
+        }
+        .enroll-user-surname {
+            width: 155px; color: #232D42; font-size: 16px; font-family: Inter;
+            font-weight: 400; line-height: 28px; word-wrap: break-word
+        }
+        .enroll-user-surname.active {
+            color: white;
+        }
+        .enroll-user-no {
+            width: 149px; color: #232D42; font-size: 16px; font-family: Inter;
+            font-weight: 400; line-height: 28px; word-wrap: break-word
+        }
+        .enroll-user-no.active {
+            color: white;
+        }
+
     </style>
     {% block extra_head %}{% endblock %}
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>

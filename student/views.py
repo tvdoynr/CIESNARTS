@@ -128,7 +128,7 @@ class StudentCourseView(View):
 
         active_courses = [course for course in active_courses if not course.is_student_enrolled(student)]
 
-        paginator_enrolled_page = Paginator(enrolled_courses, 5)
+        paginator_enrolled_page = Paginator(enrolled_courses, 8)
         paginator_can_enroll_course = Paginator(active_courses, 5)
 
         enrolled_page_number = request.GET.get('enrolled_page')

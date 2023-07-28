@@ -23,6 +23,7 @@ def user_is_manager(function):
             return function(request, *args, **kwargs)
         else:
             raise PermissionDenied
+
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
     return wrap
@@ -176,10 +177,9 @@ class AddUserView(View):
 
         elif "enroll" in request.POST:
             add_user_form = CreateUserForm()
-            selected_students = request.POST.getlist("selected_students")
-
-            for student_id in selected_students:
-                student = User.objects.get(pk=student_id)
+            selected_students = request.POST.get("selected_students")
+            for student_id in selected_students.split(','):
+                student = User.objects.get(pk=int(student_id))
                 student.is_active = True
                 student.save()
 
@@ -187,10 +187,9 @@ class AddUserView(View):
 
         elif "delete" in request.POST:
             add_user_form = CreateUserForm()
-            selected_students = request.POST.getlist("selected_students")
-
-            for student_id in selected_students:
-                student = User.objects.get(pk=student_id)
+            selected_students = request.POST.get("selected_students")
+            for student_id in selected_students.split(','):
+                student = User.objects.get(pk=int(student_id))
                 student.delete()
 
             return redirect(reverse("AddUserPage"))

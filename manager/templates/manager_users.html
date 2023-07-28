@@ -2,70 +2,108 @@
 {% load crispy_forms_filters %}
 
 {% block content %}
-    <div class="row">
-      <div class="col-md-6">
+<div class="row">
+  <div class="col-md-6">
+    <h2>Add a new User</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <button type="submit" name="add_user">Add User</button>
+    </form>
 
-          <h2>Add a new User</h2>
-          <form method="post">
-            {% csrf_token %}
-            {{ form|crispy }}
+    {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
 
-            <button type="submit" name="add_user">Add User</button>
-          </form>
+  <div class="col-md-6">
+    <h3>Inactive Students</h3>
 
-          {% if messages %}
-            <ul class="messages">
-              {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-
-      </div>
-
-      <div class="col-md-6">
-
-          <h3>Inactive Students</h3>
-              <form method="post">
-                {% csrf_token %}
-                  <ul>
-                    {% for student in page_obj %}
-                      <li>
-                        <label>
-                          {{ student.username }} - {{ student.first_name }} {{ student.last_name}}
-                          <input type="checkbox" name="selected_students" value="{{ student.pk }}">
-                        </label>
-                      </li>
-                      <br>
-                    {% empty %}
-                      <li>All students has been enrolled.</li>
-                    {% endfor %}
-                  </ul>
-
-                  <button type="submit" id="edit-button" name="enroll" style="width: 52px; height: 30px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+    <form method="post" id="studentForm">
+      {% csrf_token %}
+        <input type="hidden" id="selectedStudents" name="selected_students" value="">
+            <div style="width: 657px; height: 358px; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: inline-flex">
+              <div style="background: white; justify-content: flex-start; align-items: flex-start; display: inline-flex">
+                <div style="padding-left: 24px; padding-right: 24px; padding-top: 12px; padding-bottom: 12px; background: #032D23; justify-content: center; align-items: center; gap: 10px; display: flex">
+                  <div style="width: 41px; color: white; font-size: 16px; font-family: Inter; font-weight: 500; line-height: 28px; word-wrap: break-word">#</div>
+                </div>
+                <div style="padding-left: 24px; padding-right: 24px; padding-top: 12px; padding-bottom: 12px; background: #032D23; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+                  <div style="width: 120px; color: white; font-size: 16px; font-family: Inter; font-weight: 500; line-height: 28px; word-wrap: break-word">NAME</div>
+                </div>
+                <div style="padding-left: 24px; padding-right: 24px; padding-top: 12px; padding-bottom: 12px; background: #032D23; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex">
+                  <div style="width: 155px; color: white; font-size: 16px; font-family: Inter; font-weight: 500; line-height: 28px; word-wrap: break-word">SURNAME</div>
+                </div>
+                <div style="padding-left: 24px; padding-right: 24px; padding-top: 12px; padding-bottom: 12px; background: #032D23; justify-content: flex-start; align-items: center; gap: 10px; display: flex">
+                  <div style="width: 149px; color: white; font-size: 16px; font-family: Inter; font-weight: 500; line-height: 28px; word-wrap: break-word">STUDENT NO</div>
+                </div>
+              </div>
+              <div style="width: 657px; height: 1px; background: #EEEEEE"></div>
+                {% for student in page_obj %}
+                      <div class="enroll-user" data-student-id="{{ student.pk }}">
+                        <div class="enroll-user-value-inline">
+                          <div class="enroll-user-counter">{{ forloop.counter }}</div>
+                        </div>
+                        <div class="enroll-user-value-inline">
+                          <div class="enroll-user-name">{{ student.first_name}}</div>
+                        </div>
+                        <div class="enroll-user-value-inline">
+                          <div class="enroll-user-surname">{{ student.last_name }}</div>
+                        </div>
+                        <div class="enroll-user-value-inline">
+                          <div class="enroll-user-no">{{ student.id }}</div>
+                        </div>
+                      </div>
+                    <div style="width: 657px; height: 1px; background: #EEEEEE"></div>
+                {% empty %}
+                    <h2 style="margin-left: 30%; margin-top: 2%; color: #032D23; font-family: Playfair Display; font-size: 20px"> All student has been enrolled</h2>
+                {% endfor %}
+            </div>
+            <button type="submit" id="edit-button" name="enroll" style="width: 52px; height: 30px; flex-shrink: 0; border-radius: 6px; background: #032D23;
                     color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Enroll</button>
                   <button type="submit" id="delete-button" onclick="return confirm('Are you sure you want to delete?');" name="delete" style="width: 52px; height: 30px; flex-shrink: 0; border-radius: 6px; background: #032D23;
                     color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Delete</button>
-                </form>
-              <script>
-                const checkboxes = document.querySelectorAll('input[name="selected_students"]');
-                const editButton = document.getElementById('edit-button');
-                const delButton = document.getElementById('delete-button');
+      </form>
 
-                checkboxes.forEach((checkbox) => {
-                  checkbox.addEventListener('change', () => {
-                    const anyCheckboxChecked = [...checkboxes].some((checkbox) => checkbox.checked);
-                    delButton.disabled = !anyCheckboxChecked;
-                    editButton.disabled = !anyCheckboxChecked;
-                  });
-                });
+    <script>
+const enrollDivs = document.querySelectorAll('.enroll-user');
+const editButton = document.getElementById('edit-button');
+const deleteButton = document.getElementById('delete-button');
+const selectedStudents = document.getElementById('selectedStudents');
 
-                delButton.onclick = function() {
-                  const anyCheckboxChecked = [...checkboxes].some((checkbox) => checkbox.checked);
-                  return anyCheckboxChecked && confirm('Are you sure you want to delete?');
+function updateSelectedStudents() {
+  let selectedIds = Array.from(enrollDivs)
+    .filter(div => div.classList.contains('active'))
+    .map(div => div.dataset.studentId);
+  selectedStudents.value = selectedIds.join(',');
+  editButton.disabled = !selectedIds.length;
+  deleteButton.disabled = !selectedIds.length;
+}
+
+enrollDivs.forEach((div) => {
+  div.addEventListener('click', () => {
+    div.classList.toggle('active');
+    div.querySelector('.enroll-user-value-inline').classList.toggle('active');
+    div.querySelector('.enroll-user-counter').classList.toggle('active');
+    div.querySelector('.enroll-user-name').classList.toggle('active');
+    div.querySelector('.enroll-user-surname').classList.toggle('active');
+    div.querySelector('.enroll-user-no').classList.toggle('active');
+    updateSelectedStudents();
+  });
+});
+
+deleteButton.onclick = function() {
+  if (confirm('Are you sure you want to delete?')) {
+    return true;
+  } else {
+    return false;
+  }
 };
+</script>
 
-              </script>
 
             <br>
             <br>

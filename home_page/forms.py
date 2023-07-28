@@ -4,7 +4,7 @@ from django.core.validators import RegexValidator
 
 class LoginForm(forms.Form):
     id = forms.CharField(
-        max_length=10,
+        max_length=9,
         widget=forms.TextInput(attrs={'style':'max-width:385px'}),
         validators=[
             RegexValidator(
@@ -21,7 +21,7 @@ class RegistrationForm(forms.Form):
     first_name = forms.CharField()
     last_name = forms.CharField()
     id = forms.CharField(
-        max_length=10,
+        max_length=9,
         validators=[
             RegexValidator(
                 regex='^[0-9]*$',
@@ -39,7 +39,7 @@ class RegistrationForm(forms.Form):
 
 class ForgotPasswordForm(forms.Form):
     id = forms.CharField(
-        max_length=10,
+        max_length=9,
         validators=[
             RegexValidator(
                 regex='^[0-9]*$',

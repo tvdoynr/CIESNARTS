@@ -73,7 +73,7 @@ class InstructorCoursesView(View):
         ).order_by("-is_current_semester", "course_id")
 
         paginator_active_page = Paginator(active_courses, 5)
-        paginator_forum_page = Paginator(enrolled_courses, 5)
+        paginator_forum_page = Paginator(enrolled_courses, 8)
 
         active_page_number = request.GET.get('active_page')
         forum_page_number = request.GET.get('forum_page')
