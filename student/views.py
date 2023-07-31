@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from announcements import get_announcements
-
+from django.db import transaction
 from accounts.models import Course, Section, Profile, Grade, Semester
 from .forms import ChangeEmailForm, ChangePasswordForm
 
@@ -160,7 +160,6 @@ class StudentTakeCourseView(View):
             grades[section.id] = Grade.objects.filter(course__course_id=course.course_id,
                                                       instructor=section.Instructor).exclude(course__semester=semester)
 
-        print(grades)
         bins = {}
         for section_id, grade_values in grades.items():
             bins[section_id] = [0] * 11
@@ -197,10 +196,9 @@ class StudentTakeCourseView(View):
             'bins': json.dumps(bins),
         }
 
-        print(bins)
-
         return render(request, "student_enroll_course.html", context)
 
+    @transaction.atomic
     def post(self, request, course_id):
         section_id = request.POST.get('section_id')
         section = Section.objects.get(pk=section_id)

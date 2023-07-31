@@ -1,3 +1,4 @@
+import holidays
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -6,6 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.forms import formset_factory
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
@@ -13,7 +15,7 @@ from django.utils.crypto import get_random_string
 from django.utils.decorators import method_decorator
 from django.views import View
 from .forms import ChangeEmailForm, ChangePasswordForm, CourseForm, SemesterForm, CreateUserForm, SectionForm
-from accounts.models import Course, Profile, Semester
+from accounts.models import Course, Profile, Semester, Section
 
 
 def user_is_manager(function):
@@ -106,21 +108,31 @@ class CourseCreateView(View):
         return render(request, 'manager_courses.html', {'form': course_create_form, 'page_obj': page_obj})
 
     def post(self, request, *args, **kwargs):
-        course_create_form = CourseForm(request.POST)
-        if course_create_form.is_valid():
-            course = course_create_form.save(commit=False)
-            if course.can_be_created():
-                course.save()
-                messages.success(request, 'Course has been created successfully.')
-                return redirect(reverse('CreateCoursePage'))
-            else:
-                messages.error(request, 'The semester has either not started or has already ended.')
+        if "delete_course" in request.POST:
+            try:
+                course_id = request.POST.get('course_id')
+                print(course_id)
+                course = Course.objects.get(pk=course_id)
+                course.delete()
+                return JsonResponse({"success": True})
+            except:
+                return JsonResponse({"success": False})
+        else:
+            course_create_form = CourseForm(request.POST)
+            if course_create_form.is_valid():
+                course = course_create_form.save(commit=False)
+                if course.can_be_created():
+                    course.save()
+                    messages.success(request, 'Course has been created successfully.')
+                    return redirect(reverse('CreateCoursePage'))
+                else:
+                    messages.error(request, 'The semester has either not started or has already ended.')
 
-        courses = Course.objects.all().order_by("course_id")
-        paginator = Paginator(courses, 5)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        return render(request, 'manager_courses.html', {'form': course_create_form, 'page_obj': page_obj})
+            courses = Course.objects.all().order_by("course_id")
+            paginator = Paginator(courses, 5)
+            page_number = request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+            return render(request, 'manager_courses.html', {'form': course_create_form, 'page_obj': page_obj})
 
 
 @method_decorator(login_required, name="dispatch")
@@ -208,9 +220,29 @@ class AddUserView(View):
 @method_decorator(login_required, name="dispatch")
 @method_decorator(user_is_manager, name="dispatch")
 class SemesterCreateView(View):
+    def get_holidays(self):
+        current_year = timezone.now().year
+        start_year = current_year
+        end_year = current_year
+        holidays_list = []
+
+        for year in range(start_year, end_year + 1):
+            tr_holidays = holidays.Turkey(years=year)
+            for date, name in sorted(tr_holidays.items()):
+                holidays_list.append((date, name))
+        return holidays_list
+
     def get(self, request):
         form = SemesterForm()
-        return render(request, 'manager_semester.html', {'form': form})
+        holidays_turkey = self.get_holidays()
+
+        context = {
+            'form': form,
+            'holidays_turkey': holidays_turkey,
+        }
+        print(holidays_turkey)
+
+        return render(request, 'manager_semester.html', context)
 
     def post(self, request):
         form = SemesterForm(request.POST)
@@ -255,15 +287,15 @@ class CourseEditView(View):
     def post(self, request, course_id):
         course = get_object_or_404(Course, id=course_id)
         sections = course.sections.all()
+        sections_id = course.sections.values_list("pk", flat=True)
+        sections_id_list = list(sections_id)
         section_formset = self.section_formset_class(request.POST)
         if section_formset.is_valid():
             for i, form in enumerate(section_formset):
-                section = sections[i]
                 classroom = form.cleaned_data.get('Classroom')
                 instructor = form.cleaned_data.get('Instructor')
-                section.Classroom = classroom
-                section.Instructor = instructor
-                section.save()
+                section_id = sections_id_list[i]
+                Section.objects.filter(pk=section_id).update(Classroom=classroom, Instructor=instructor)
             course.is_active = True
             course.save()
             return redirect(reverse('CreateCoursePage'))

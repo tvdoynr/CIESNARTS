@@ -2,9 +2,13 @@ import urllib.parse
 
 import requests
 from bs4 import BeautifulSoup
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 url = "https://cs.hacettepe.edu.tr/json/announcements.json"
-json_data = requests.get(url).json()[:10]
+json_data = requests.get(url, verify=False).json()[:15]
 
 
 def cleanup(str_: str) -> str:

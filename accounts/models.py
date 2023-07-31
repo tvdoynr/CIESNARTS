@@ -54,10 +54,13 @@ class Course(models.Model):
         super(Course, self).save(*args, **kwargs)
 
         if creating_new_course:
+            sections_list = [Section(course=self, NumberOfStudents=0, Classroom="") for _ in range(3)]
+            Section.objects.bulk_create(sections_list)
+            '''
             for i in range(1, 4):
                 section = Section(course=self, NumberOfStudents=0, Classroom="")
                 section.save()
-
+            '''
 
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='sections')

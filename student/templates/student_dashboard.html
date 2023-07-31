@@ -2,7 +2,7 @@
 {% load humanize %}
 
 {% block content %}
-<div class="row">
+<div class="row" style="margin-left: 4%">
     <div class="col-md-6" style="margin-top: 4%">
         <h2 class="text-center" style="color: #032D23; font-family: Playfair Display; font-size: 40px">Student Profile</h2>
         <div class="card mx-auto" style="width: 18rem;">
@@ -13,8 +13,9 @@
 
             </div>
         </div>
-        <div style="width: 526px; height: 61px; justify-content: center; align-items: center; gap: 250px; display: inline-flex">
-          <div style="width: 97px; color: black; font-size: 20px; font-family: Inter; font-weight: 700; word-wrap: break-word">Semester</div>
+        <div style="width: 526px; height: 61px; justify-content: center; align-items: center; gap: 50px; display: inline-flex">
+            <div style="width: 162px; color: black; font-size: 23px; font-family: Inter; font-weight: 500; word-wrap: break-word">{{ semester.start_date|naturalday }}</div>
+          <div style="width: 97px; text-align: center; color: black; font-size: 20px; font-family: Inter; font-weight: 700; word-wrap: break-word">Semester</div>
           <div style="width: 162px; text-align: right; color: black; font-size: 23px; font-family: Inter; font-weight: 500; word-wrap: break-word">{{ semester.finish_date|naturalday }}</div>
         </div>
         <div style="width: 526px; height: 21.96px; background: rgba(67, 151, 67, 0.20); border-radius: 6px">

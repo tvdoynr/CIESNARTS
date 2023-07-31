@@ -5,7 +5,7 @@
 {% block content %}
     <div class="row">
     <div class="col-md-6">
-      <h2>Add a new course</h2>
+      <h3 style="margin-top: 4%; margin-left: 27%; color: #032D23; font-family: Playfair Display; font-size: 40px">Add a new course</h3>
       <form method="post">
         {% csrf_token %}
         {{ form.media }}
@@ -13,31 +13,31 @@
 
         <div class="fieldWrapper">
           {{ form.course_id.errors }}
-          <label for="{{ form.course_id.id_for_label }}">Course ID:</label>
+          <label for="{{ form.course_id.id_for_label }}" style="color: #032D23; font-family: Playfair Display; font-size: 21px">Course ID:</label>
           {{ form.course_id|add_class:"textinput form-control" }}
         </div>
 
         <div class="fieldWrapper">
           {{ form.course_name.errors }}
-          <label for="{{ form.course_name.id_for_label }}">Course Name:</label>
+          <label for="{{ form.course_name.id_for_label }}" style="color: #032D23; font-family: Playfair Display; font-size: 21px">Course Name:</label>
           {{ form.course_name|add_class:"textinput form-control" }}
         </div>
 
         <div class="fieldWrapper">
           {{ form.description.errors }}
-          <label for="{{ form.description.id_for_label }}">Description:</label>
+          <label for="{{ form.description.id_for_label }}" style="color: #032D23; font-family: Playfair Display; font-size: 21px">Description:</label>
           {{ form.description }}
         </div>
 
         <div class="fieldWrapper">
           {{ form.course_credit.errors }}
-          <label for="{{ form.course_credit.id_for_label }}">Course Credit:</label>
+          <label for="{{ form.course_credit.id_for_label }}" style="color: #032D23; font-family: Playfair Display; font-size: 21px">Course Credit:</label>
           {{ form.course_credit|add_class:"textinput form-control" }}
         </div>
 
         <div class="fieldWrapper">
           {{ form.semester.errors }}
-          <label for="{{ form.semester.id_for_label }}">Semester:</label>
+          <label for="{{ form.semester.id_for_label }}" style="color: #032D23; font-family: Playfair Display; font-size: 21px">Semester:</label>
           {{ form.semester|add_class:"select2 form-control" }}
         </div>
 
@@ -55,6 +55,89 @@
         {% endif %}
         </div>
 
+    <div class="col-md-6">
+        <h3 style="margin-left: 29%; margin-top: 4%; color: #032D23; font-family: Playfair Display; font-size: 40px"> Courses </h3>
+        <div style="margin-top: 5%; width: 464px; height: 406px; border-radius: 8px; overflow: hidden; border: 0.50px #EEEEEE solid; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: inline-flex">
+            {% for course in page_obj %}
+
+                    <div class="courses" data-id="{{ course.pk }}">
+                        <div class="courses-inline">
+                            <div class="courses-name">{{ course.course_id }}</div>
+                            <div class="courses-classroom">Activeness: {{ course.is_active }}</div>
+                        </div>
+                    </div>
+                    <div style="width: 657px; height: 1px; background: #EEEEEE"></div>
+            {% empty %}
+                <h3 style="margin-left: 24%; margin-top: 2%; color: #032D23; font-family: Playfair Display;"> There is no course.</h3>
+            {% endfor %}
+        </div>
+    <br>
+    <br>
+    <div style="display: flex; width: 120px">
+        <button type="submit" id="edit-button" name="edit_course" style="width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal; display: none">Edit</button>
+
+        <button type="submit" id="delete-button" name="delete_course" style="margin-left: 6%; width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal; display: none">Delete</button>
+    </div>
+        <script>
+            $(document).ready(function() {
+                $('.select2').select2();
+            });
+
+            const courseDivs = document.querySelectorAll('.courses');
+            const editButton = document.getElementById('edit-button');
+            const deleteButton = document.getElementById('delete-button');
+            function clearActiveClasses() {
+
+                courseDivs.forEach((div) => {
+                    div.classList.remove('active');
+                    div.querySelector('.courses-name').classList.remove('active');
+                    div.querySelector('.courses-classroom').classList.remove('active');
+                    div.querySelector('.courses-inline').classList.remove('active');
+                });
+            }
+
+            courseDivs.forEach((div) => {
+                div.addEventListener('click', () => {
+                    clearActiveClasses();
+                    div.classList.add('active');
+                    div.querySelector('.courses-name').classList.add('active');
+                    div.querySelector('.courses-classroom').classList.add('active');
+                    div.querySelector('.courses-inline').classList.add('active');
+
+                    editButton.style.display = 'block';
+                    deleteButton.style.display = 'block';
+                    editButton.onclick = () => {
+                        window.location.href = `/manager/course/${div.getAttribute('data-id')}/edit/`;
+                    };
+                });
+            });
+
+            deleteButton.addEventListener('click', () => {
+            const selectedCourseId = document.querySelector('.courses.active').getAttribute('data-id');
+            if (confirm("Are you sure you want to delete this course?")) {
+                $.ajax({
+                    type: 'POST',
+                    data: {
+                        'course_id': selectedCourseId,
+                        'delete_course': true,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Something went wrong. Could not delete the course.')
+                        }
+                    }
+                });
+            }
+        });
+        </script>
+
+        <!--
         <div class="course-list col-md-6">
             <h3>All courses</h3>
               <ul>
@@ -96,7 +179,7 @@
                     window.location.href = editURL;
                   });
                 </script>
-
+            -->
 
             <br>
             <br>
@@ -119,6 +202,6 @@
                 {% endif %}
               </ul>
             </nav>
-        </div>
+    </div>
     </div>
 {% endblock %}
