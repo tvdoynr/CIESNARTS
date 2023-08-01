@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import models
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -113,6 +114,14 @@ class SubmissionView(View):
 
         new_score = submission.score
         return JsonResponse({'new_score': new_score})
+
+
+class SearchSubmissionsView(View):
+    def get(self, request, course_id):
+        query = request.GET.get('title', '')
+        submissions = Submission.objects.filter(Q(course_id=course_id), Q(title__icontains=query))[:5]  # limit to 5 results for performance
+        submissions_json = list(submissions.values('title', 'id'))  # convert to JSON-compatible data
+        return JsonResponse(submissions_json, safe=False)
 
 
 @method_decorator(login_required, name="dispatch")

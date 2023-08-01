@@ -7,4 +7,6 @@ urlpatterns = [
     path("submissions/<int:course_id>/comments/<int:submission_id>/", views.CommentsView.as_view(), name="CommentsPage"),
     path("course/<int:course_id>/profile/<int:user_id>/", views.CieszaProfileView.as_view(), name="CieszaProfilePage"),
     path("course/<int:course_id>/profile/<int:user_id>/edit/", views.CieszaProfileEditView.as_view(), name="CieszaProfileEditPage"),
+    path("submissions/<int:course_id>/search/", views.SearchSubmissionsView.as_view(), name="SubmissionsSearch"),
+
 ]

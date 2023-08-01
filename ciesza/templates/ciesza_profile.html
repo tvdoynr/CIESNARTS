@@ -27,11 +27,11 @@
                     <td class="info-container" style="padding-left: 10px">
                         <a class="thread-title" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.title }}</a>
                         <br>
-                        <h6 class="thread-info">submitted {{ submission.timestamp|naturaltime }} by <a
+                        <h6 class="thread-info">submitted {{ submission.timestamp|naturaltime }} by <a class="author-and-comments"
                                 href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}">{{ submission.author_name }}</a></h6>
 
                         <ul class="buttons">
-                            <li><a href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }} comments</a></li>
+                            <li><a class="author-and-comments" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }} comments</a></li>
                         </ul>
 
                     </td>
@@ -40,23 +40,25 @@
             </tbody>
         </table>
 
-            <nav>
-                <ul class="pager">
-                    {% if submissions_page_obj.has_previous %}
-                        <li class="previous"><a href="?page={{ submissions_page_obj.previous_page_number }}"><span
-                                aria-hidden="true">&larr;</span> Previous</a></li>
-                    {% else %}
-                        <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span> Previous</a></li>
-                    {% endif %}
-
-                    {% if submissions_page_obj.has_next %}
-                        <li class="next"><a href="?page={{ submissions_page_obj.next_page_number }}">Next <span
-                                aria-hidden="true">&rarr;</span></a></li>
-                    {% else %}
-                        <li class="next disabled"><a href="#">Next <span aria-hidden="true">&rarr;</span></a></li>
-                    {% endif %}
-                </ul>
-            </nav>
+            <nav class="center-table" aria-label="Page navigation" style="margin-top: 2rem;">
+            <ul class="pagination">
+                {% if submissions_page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ submissions_page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                {% for i in submissions_page_obj.paginator.page_range %}
+                <li class="page-item {% if submissions_page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+                {% endfor %}
+                {% if submissions_page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ submissions_page_obj.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
         </div>
 
     <div class="col-md-4">

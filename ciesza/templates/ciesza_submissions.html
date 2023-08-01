@@ -1,8 +1,52 @@
 {% extends 'ciesza_base.html' %}
 {% load humanize %}
 {% block content %}
+    <style>
+        .center-table {
+            margin: 0 auto;
+            width: 50%;
+        }
+        .thread-title {
+            color: #0e604d;
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            line-height: 1.5;
+        }
+        .thread-info {
+            color: #959a99;
+            font-size: 16px;
+        }
+        .buttons a {
+            color: #b0772c;
+        }
+        .pager .page-item.active .page-link {
+            background-color: #0e604d;
+            color: #ffffff;
+        }
+        .pager .page-item .page-link {
+            color: #0e604d;
+        }
+        .pager .page-item.disabled .page-link {
+            color: #959a99;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        .table-striped tbody tr:nth-of-type(even) {
+            background-color: #f6f7f7;
+        }
+    </style>
 
-    <table>
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" style="margin-left: auto; margin-right: auto; max-width: 50%; margin-top: 2%" placeholder="Create Post" onclick="window.location='{% url 'SubmitPage' course_id=course_id %}';">
+    </div>
+
+    <div class="input-group mb-3" style="margin-left: auto; margin-right: auto; margin-top: 2%; width: 50%">
+        <input type="text" id="searchBox" class="form-control" style="margin-left: auto; margin-right: auto; margin-top: 2%" placeholder="Search Submission">
+        <div id="searchResults" class="dropdown-menu" aria-labelledby="searchBox"></div>
+    </div>
+
+    <table class="table table-striped center-table">
         <tbody>
         {% for submission in submissions_page_obj %}
             <tr>
@@ -14,20 +58,20 @@
                             <div><i class="fas fa-chevron-up {% if  submission.up_voted %} upvoted {% endif %}"
                                     title="upvote" onclick="vote(this)"></i>
                             </div>
-                            <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
+                            <div class="score" style="padding-left: 3px " title="score">{{ submission.score }}</div>
                             <div><i class="fas fa-chevron-down {% if  submission.down_voted %} downvoted {% endif %}"
                                     title="downvote"
                                     onclick="vote(this)"></i></div>
                     </div>
                 </td>
                 <td class="info-container" style="padding-left: 10px">
-                    <a class="thread-title" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.title }}</a>
+                    <a class="thread-title" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}" >{{ submission.title }}</a>
                     <br>
-                    <h6 class="thread-info">Submitted {{ submission.timestamp|naturaltime }} by <a
+                    <h6 class="thread-info" >Submitted {{ submission.timestamp|naturaltime }} by <a class="author-and-comments"
                             href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}">{{ submission.author_name }}</a></h6>
 
                     <ul class="buttons">
-                        <li><a href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }} comments</a></li>
+                        <li><a class="author-and-comments" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }} comments</a></li>
                     </ul>
 
 
@@ -37,26 +81,64 @@
         </tbody>
     </table>
 
-    <nav>
-        <ul class="pager">
-            {% if submissions_page_obj.has_previous %}
-                <li class="previous"><a href="?page={{ submissions_page_obj.previous_page_number }}"><span
-                        aria-hidden="true">&larr;</span> Previous</a></li>
-            {% else %}
-                <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span> Previous</a></li>
-            {% endif %}
-
-            {% if submissions_page_obj.has_next %}
-                <li class="next"><a href="?page={{ submissions_page_obj.next_page_number }}">Next <span
-                        aria-hidden="true">&rarr;</span></a></li>
-            {% else %}
-                <li class="next disabled"><a href="#">Next <span aria-hidden="true">&rarr;</span></a></li>
-            {% endif %}
-        </ul>
-    </nav>
+    <nav class="center-table" aria-label="Page navigation" style="margin-top: 2rem;">
+            <ul class="pagination">
+                {% if submissions_page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ submissions_page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                {% for i in submissions_page_obj.paginator.page_range %}
+                <li class="page-item {% if submissions_page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+                {% endfor %}
+                {% if submissions_page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ submissions_page_obj.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
 
 
     <script>
+        $(document).ready(function () {
+        $('#searchBox').on('input', function () {
+            var query = $(this).val();
+            if (query.length > 0) {
+                $.ajax({
+                    url: "{% url 'SubmissionsSearch' course_id=course_id %}",
+                    data: {
+                        'title': query,
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        var resultsDiv = $('#searchResults');
+                        resultsDiv.empty();
+                        for (var i = 0; i < data.length; i++) {
+                            var result = data[i];
+                            var resultLink = $('<a>').attr('href', "{% url 'CommentsPage' course_id=course_id submission_id=0 %}".replace('0', result.id)).text(result.title).addClass('dropdown-item');
+                            resultsDiv.append(resultLink);
+                        }
+                        if (data.length > 0) {
+                            resultsDiv.show();
+                        } else {
+                            resultsDiv.hide();
+                        }
+                    },
+                });
+            } else {
+                $('#searchResults').hide();
+            }
+        });
+        $(document).on('click', function (event) {
+            if (!$(event.target).closest('#searchBox').length) {
+                $('#searchResults').hide();
+            }
+        });
+        });
+
         function vote(element) {
             var whatId = $(element).parent().parent().data("what-id");
             var whatType = $(element).parent().parent().data("what-type");

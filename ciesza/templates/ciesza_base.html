@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>{% block title %}Default Title{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
     <style>
         .upvoted {
             color: orangered;
@@ -8,9 +12,22 @@
         .downvoted{
             color: orangered;
         }
+        .navbar-light .navbar-nav .active>.nav-link{
+            color: #0fd7a7;
+        }
+        .page-item.active .page-link {
+            background-color: #439743;
+        }
+        .thread-title {
+            color: #0e604d; font-family: Playfair Display; font-size: 28px
+        }
+        .thread-info {
+            color: #959a99
+        }
+        .author-and-comments {
+            color: #b0772c
+        }
     </style>
-    <title>{% block title %}Default Title{% endblock %}</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     {% load static %}
     <script type="text/javascript" src="{% static "ckeditor/ckeditor-init.js" %}"></script>
     <script type="text/javascript" src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
@@ -53,8 +70,6 @@
         {% block content %}{% endblock %}
     </div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
