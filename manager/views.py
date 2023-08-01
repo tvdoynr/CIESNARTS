@@ -1,3 +1,5 @@
+import json
+
 import holidays
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -6,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
+from django.db.models import Avg
 from django.forms import formset_factory
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -14,8 +17,10 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.decorators import method_decorator
 from django.views import View
+
+from announcements import get_announcements
 from .forms import ChangeEmailForm, ChangePasswordForm, CourseForm, SemesterForm, CreateUserForm, SectionForm
-from accounts.models import Course, Profile, Semester, Section
+from accounts.models import Course, Profile, Semester, Section, Grade
 
 
 def user_is_manager(function):
@@ -35,7 +40,32 @@ def user_is_manager(function):
 @method_decorator(user_is_manager, name="dispatch")
 class ManagerView(View):
     def get(self, request):
-        return render(request, "manager_dashboard.html")
+        cs_announcements = get_announcements()
+
+        announcements_paginator_page = Paginator(cs_announcements, 4)
+        announcements_page_number = request.GET.get('page')
+        announcements_obj = announcements_paginator_page.get_page(announcements_page_number)
+
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
+
+        total_length = semester.semester_length()
+        elapsed_length = semester.elapsed_days()
+        percentage_complete = min(100, max(0, (elapsed_length / total_length) * 100))
+
+        students_count = Profile.objects.filter(user_type='student').count()
+        instructor_count = Profile.objects.filter(user_type='instructor').count()
+        course_count = Course.objects.filter(semester=semester).count()
+
+        context = {
+            'announcements_obj': announcements_obj,
+            'percentage_complete': percentage_complete,
+            'semester': semester,
+            'students_count': students_count,
+            'instructor_count': instructor_count,
+            'course_count': course_count,
+        }
+        return render(request, "manager_dashboard.html", context)
 
 
 @method_decorator(login_required, name="dispatch")
@@ -266,6 +296,34 @@ class CourseEditView(View):
         course = get_object_or_404(Course, id=course_id)
         sections = course.sections.all()
 
+        current_date = timezone.now().date()
+        past_semesters = Semester.objects.filter(finish_date__lt=current_date)
+        past_courses = Course.objects.filter(course_id=course.course_id, semester__in=past_semesters)
+        print(course.course_id)
+
+        instructor_info = []
+        for past_course in past_courses:
+            past_sections = past_course.sections.all()
+            for section in past_sections:
+                if section.Instructor:
+                    avg_grade = Grade.objects.filter(course=past_course,
+                                                     instructor=section.Instructor).aggregate(Avg('value'))['value__avg']
+                    count = Grade.objects.filter(course=past_course,
+                                                 instructor=section.Instructor).count()
+
+                    if avg_grade is None:
+                        avg_grade = 0
+
+                    instructor_info.append({
+                        'instructor': section.Instructor.first_name + " " + section.Instructor.last_name,
+                        'avg_grade': avg_grade,
+                        'count': count,
+                    })
+
+        instructor_info = sorted(instructor_info, key=lambda k: k['count'])
+
+        instructor_info = list({v['instructor']: v for v in instructor_info}.values())
+
         initial_data_classroom = [{'classroom': section.Classroom or None} for section in sections]
         initial_data_instructors = [{'instructor': section.Instructor or None} for section in sections]
 
@@ -277,10 +335,20 @@ class CourseEditView(View):
             instructors = initial_data_instructors[i]['instructor']
             form.initial['Instructor'] = instructors
 
+        instructors = [info['instructor'] for info in instructor_info]
+        avg_grades = [info['avg_grade'] for info in instructor_info]
+        counts = [info['count'] for info in instructor_info]
+
         context = {
+            'course': course,
             'sections': sections,
             'section_formset': section_formset,
+            'instructors': instructors,
+            'avg_grades': avg_grades,
+            'counts': counts,
         }
+
+        print(instructor_info)
 
         return render(request, self.template_name, context)
 

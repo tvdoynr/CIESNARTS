@@ -32,6 +32,15 @@
       </div>
       <div class="row justify-content-center">
         <div class="col-md-2">
+            <i type="button" class="bi bi-bar-chart-fill"  style="padding: 0px; color: orange" onclick="openModal()"></i>
+
+            <div id="modal" class="modal">
+                <div class="modal-content" style="width: 80%; height: 80%; margin: auto; overflow: auto">
+                    <span class="close" onclick="closeModal()">&times;</span>
+                    <canvas id="chart"></canvas>
+                </div>
+            </div>
+
           <button type="submit" style="margin-top: 20%;width: 58px; height: 38px; flex-shrink: 0; border-radius: 6px; background: #032D23;
                     color: white; font-family: Inter; font-size: 16px; font-style: normal">Save</button>
         </div>
@@ -45,5 +54,71 @@
     $(document).ready(function() {
         $('.instructor_select2').select2();
     });
+
+    var instructors = {{ instructors|safe }};
+    var avg_grades = {{ avg_grades|safe }};
+    var counts = {{ counts|safe }};
+
+    function openModal() {
+        var modal = document.getElementById("modal");
+        modal.style.display = "block";
+        modal.style.display = "flex";
+        modal.style.alignItems = "center";
+        modal.style.justifyContent = "center";
+        modal.style.position = "fixed";
+        modal.style.zIndex = "1";
+        modal.style.left = "0";
+        modal.style.top = "0";
+        modal.style.width = "100%";
+        modal.style.height = "100%";
+        modal.style.overflow = "auto";
+        modal.style.backgroundColor = "rgba(0,0,0,0.4)";
+
+        var ctx = document.getElementById('chart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'line',
+            options: {
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Average Grade per Instructor'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                var index = context[0].dataIndex;
+                                return instructors[index];
+                            }
+                        }
+                    }
+                }
+            },
+            data: {
+                labels: counts,
+                datasets: [{
+                    label: 'Average Grade',
+                    data: avg_grades,
+                    backgroundColor: 'rgba(3,45,35,1)',
+                    borderColor: 'rgba(3,45,35,1)',
+                    borderWidth: 1,
+                }]
+            },
+
+        });
+    }
+
+    function closeModal() {
+        var modal = document.getElementById("modal");
+        modal.style.display = "none";
+    }
 </script>
 {% endblock %}
