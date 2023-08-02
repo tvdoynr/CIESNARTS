@@ -4,8 +4,9 @@
 
 {% block content %}
     <div class="row">
-        <div class="col-md-8">
-            <h1> Your Submissions </h1>
+        <div class="col-md-7">
+            <h3 style="margin-top: 3%; margin-left: 24%; color: #032D23; font-family: Playfair Display; font-size: 40px"> Your Submissions </h3>
+            <hr>
             <table>
             <tbody>
             {% for submission in submissions_page_obj %}
@@ -15,11 +16,11 @@
                              data-what-type="submission"
                              data-what-id="{{ submission.id }}"
                              data-what-user="{{ request.user }}">
-                                <div><i class="fas fa-chevron-up {% if submission.up_voted %} upvoted {% endif %}"
+                                <div><i class="fas fa-chevron-up fa-lg {% if submission.up_voted %} upvoted {% endif %}"
                                         title="upvote" onclick="vote(this)"></i>
                                 </div>
-                                <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
-                                <div><i class="fas fa-chevron-down {% if submission.down_voted %} downvoted {% endif %}"
+                                <div class="score" style="padding-left: 5px; font-size: 18px" title="score">{{ submission.score }}</div>
+                                <div><i class="fas fa-chevron-down fa-lg {% if submission.down_voted %} downvoted {% endif %}"
                                         title="downvote"
                                         onclick="vote(this)"></i></div>
                         </div>
@@ -61,16 +62,30 @@
         </nav>
         </div>
 
-    <div class="col-md-4">
-        <h1> Profile </h1>
+    <div class="col-md-5">
+        <h3 style="margin-top: 5%; margin-left: 35%; color: #032D23; font-family: Playfair Display; font-size: 40px"> Profile </h3>
+        <hr>
         <div>
-            <h3> Score: <span id="author-score">{{ author.score }}</span>
+            <h3 style="color: #032D23; font-family: Playfair Display; font-size: 30px; margin-left: 4%"> Score: <span id="author-score">{{ author.score }}</span>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 {% if user_id == request.user.id %}
                 <a href="{% url 'CieszaProfileEditPage' user_id=user_id course_id=course_id %}"><i class="fas fa-cog" href></i></a>
                 {% endif %}
             </h3>
 
+            <div class="card" style="margin-top: 1%">
+                <h3 class="card-header text-center" style="color: #032D23; font-family: Playfair Display; font-size: 20px">Courses</h3>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for course in courses %}
+                            <li class="list-group-item" style="color: brown; font-size: 14px; height: 38px">{{ course.course_id }} - {{ course.course_name }}
+                            <span style="color: #aaa">[{{ course.semester }}]</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+        <!--
             {% for course in courses %}
                 <li>
                 <label>
@@ -78,6 +93,7 @@
                 </label>
                 </li>
             {% endfor %}
+        -->
         </div>
     </div>
 

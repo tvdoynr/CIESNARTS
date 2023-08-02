@@ -2,141 +2,212 @@
 {% load humanize %}
 {% block content %}
     <style>
+        .container {
+            max-width: 1440px;
+        }
+
         .center-table {
             margin: 0 auto;
-            width: 50%;
+            width: 70%;
         }
+
         .thread-title {
             color: #0e604d;
             font-family: 'Playfair Display', serif;
             font-size: 24px;
             line-height: 1.5;
         }
+
         .thread-info {
             color: #959a99;
             font-size: 16px;
         }
+
         .buttons a {
             color: #b0772c;
         }
+
         .pager .page-item.active .page-link {
             background-color: #0e604d;
             color: #ffffff;
         }
+
         .pager .page-item .page-link {
             color: #0e604d;
         }
+
         .pager .page-item.disabled .page-link {
             color: #959a99;
         }
+
         .table-striped tbody tr:nth-of-type(odd) {
-            background-color: rgba(0, 0, 0, 0.2);
+            background-color: rgba(232, 118, 118, 0.2);
         }
+
         .table-striped tbody tr:nth-of-type(even) {
             background-color: #f6f7f7;
         }
     </style>
 
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" style="margin-left: auto; margin-right: auto; max-width: 50%; margin-top: 2%" placeholder="Create Post" onclick="window.location='{% url 'SubmitPage' course_id=course_id %}';">
-    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <h3 style="margin-top: 8%; margin-left: 0%; color: #032D23; font-family: Playfair Display; font-size: 32px">
+                Highest Scored Profile</h3>
+            <div style="border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 10%;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-color: green">
+                <p>{{ highest_scored_profile.user.username }}</p>
+                <p>Total Score: {{ highest_scored_profile.total_score }}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
 
-    <div class="input-group mb-3" style="margin-left: auto; margin-right: auto; margin-top: 2%; width: 50%">
-        <input type="text" id="searchBox" class="form-control" style="margin-left: auto; margin-right: auto; margin-top: 2%" placeholder="Search Submission">
-        <div id="searchResults" class="dropdown-menu" aria-labelledby="searchBox"></div>
-    </div>
 
-    <table class="table table-striped center-table">
-        <tbody>
-        {% for submission in submissions_page_obj %}
-            <tr>
-                <td>
-                    <div class="vote"
-                         data-what-type="submission"
-                         data-what-id="{{ submission.id }}"
-                         data-what-user="{{ request.user }}">
-                            <div><i class="fas fa-chevron-up {% if  submission.up_voted %} upvoted {% endif %}"
-                                    title="upvote" onclick="vote(this)"></i>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control"
+                       style="margin-left: auto; margin-right: auto; max-width: 70%; margin-top: 2%"
+                       placeholder="Create Post"
+                       onclick="window.location='{% url 'SubmitPage' course_id=course_id %}';">
+            </div>
+
+            <div class="input-group mb-3" style="margin-left: auto; margin-right: auto; margin-top: 2%; width: 70%">
+                <input type="text" id="searchBox" class="form-control"
+                       style="margin-left: auto; margin-right: auto; margin-top: 2%" placeholder="Search Submission">
+                <div id="searchResults" class="dropdown-menu" aria-labelledby="searchBox"></div>
+            </div>
+
+            <table class="table table-striped center-table">
+                <tbody>
+                {% for submission in submissions_page_obj %}
+                    <tr>
+                        <td>
+                            <div class="vote"
+                                 data-what-type="submission"
+                                 data-what-id="{{ submission.id }}"
+                                 data-what-user="{{ request.user }}">
+                                <div>
+                                    <i class="fas fa-chevron-up fa-lg {% if  submission.up_voted %} upvoted {% endif %}"
+                                       title="upvote" onclick="vote(this)"></i>
+                                </div>
+                                <div class="score {% if submission.up_voted %} upvoted {% elif submission.down_voted %} downvoted {% endif %}"
+                                     style="padding-left: 5px; font-size: 18px "
+                                     title="score">{{ submission.score }}</div>
+                                <div>
+                                    <i class="fas fa-chevron-down fa-lg {% if  submission.down_voted %} downvoted {% endif %}"
+                                       title="downvote"
+                                       onclick="vote(this)"></i></div>
                             </div>
-                            <div class="score" style="padding-left: 3px " title="score">{{ submission.score }}</div>
-                            <div><i class="fas fa-chevron-down {% if  submission.down_voted %} downvoted {% endif %}"
-                                    title="downvote"
-                                    onclick="vote(this)"></i></div>
-                    </div>
-                </td>
-                <td class="info-container" style="padding-left: 10px">
-                    <a class="thread-title" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}" >{{ submission.title }}</a>
-                    <br>
-                    <h6 class="thread-info" >Submitted {{ submission.timestamp|naturaltime }} by <a class="author-and-comments"
-                            href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}">{{ submission.author_name }}</a></h6>
+                        </td>
+                        <td class="info-container" style="padding-left: 10px">
+                            <a class="thread-title"
+                               href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.title }}</a>
+                            <br>
+                            <h6 class="thread-info">Submitted {{ submission.timestamp|naturaltime }} by <a
+                                    class="author-and-comments"
+                                    href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}">{{ submission.author_name }}</a>
+                            </h6>
 
-                    <ul class="buttons">
-                        <li><a class="author-and-comments" href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }} comments</a></li>
-                    </ul>
+                            <ul class="buttons">
+                                <li><a class="author-and-comments"
+                                       href="{% url 'CommentsPage' course_id=course_id submission_id=submission.id %}">{{ submission.comment_count }}
+                                    comments</a></li>
+                            </ul>
 
 
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
-    <nav class="center-table" aria-label="Page navigation" style="margin-top: 2rem;">
-            <ul class="pagination">
-                {% if submissions_page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ submissions_page_obj.previous_page_number }}">Previous</a>
-                </li>
-                {% endif %}
-                {% for i in submissions_page_obj.paginator.page_range %}
-                <li class="page-item {% if submissions_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-                </li>
+                        </td>
+                    </tr>
                 {% endfor %}
-                {% if submissions_page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ submissions_page_obj.next_page_number }}">Next</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
+                </tbody>
+            </table>
 
+            <nav class="center-table" aria-label="Page navigation" style="margin-top: 2rem;">
+                <ul class="pagination">
+                    {% if submissions_page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ submissions_page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    {% for i in submissions_page_obj.paginator.page_range %}
+                        <li class="page-item {% if submissions_page_obj.number == i %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if submissions_page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ submissions_page_obj.next_page_number }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        <div class="col-md-3" style="margin-right: 0%">
+            <h3 style="margin-top: 8%; margin-left: 0%; color: #032D23; font-family: Playfair Display; font-size: 32px">
+                Most Upvoted Comment</h3>
+            <div style="border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 10%;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-color: green">
+
+                <p style="margin-top: 5%; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif">{{ most_upvoted_comment.text }}</p>
+                <a style="color: #959a99; font-size: 16px">Commented {{ most_upvoted_comment.timestamp|naturaltime }}
+                    by </a>
+                <a href="{% url 'CieszaProfilePage' course_id=course_id user_id=most_upvoted_comment.author.user_id %}"
+                   style="color: #b0772c">
+                    {{ most_upvoted_comment.author_name }} </a>
+                <p style="margin-top: 5%">Score: {{ most_upvoted_comment.score }}</p>
+
+                <a> </a>
+
+
+            </div>
+        </div>
+    </div>
 
     <script>
         $(document).ready(function () {
-        $('#searchBox').on('input', function () {
-            var query = $(this).val();
-            if (query.length > 0) {
-                $.ajax({
-                    url: "{% url 'SubmissionsSearch' course_id=course_id %}",
-                    data: {
-                        'title': query,
-                    },
-                    dataType: 'json',
-                    success: function (data) {
-                        var resultsDiv = $('#searchResults');
-                        resultsDiv.empty();
-                        for (var i = 0; i < data.length; i++) {
-                            var result = data[i];
-                            var resultLink = $('<a>').attr('href', "{% url 'CommentsPage' course_id=course_id submission_id=0 %}".replace('0', result.id)).text(result.title).addClass('dropdown-item');
-                            resultsDiv.append(resultLink);
-                        }
-                        if (data.length > 0) {
-                            resultsDiv.show();
-                        } else {
-                            resultsDiv.hide();
-                        }
-                    },
-                });
-            } else {
-                $('#searchResults').hide();
-            }
-        });
-        $(document).on('click', function (event) {
-            if (!$(event.target).closest('#searchBox').length) {
-                $('#searchResults').hide();
-            }
-        });
+            $('#searchBox').on('input', function () {
+                var query = $(this).val();
+                if (query.length > 0) {
+                    $.ajax({
+                        url: "{% url 'SubmissionsSearch' course_id=course_id %}",
+                        data: {
+                            'title': query,
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            var resultsDiv = $('#searchResults');
+                            resultsDiv.empty();
+                            for (var i = 0; i < data.length; i++) {
+                                var result = data[i];
+                                var resultLink = $('<a>').attr('href', "{% url 'CommentsPage' course_id=course_id submission_id=0 %}".replace('0', result.id)).text(result.title).addClass('dropdown-item');
+                                resultsDiv.append(resultLink);
+                            }
+                            if (data.length > 0) {
+                                resultsDiv.show();
+                            } else {
+                                resultsDiv.hide();
+                            }
+                        },
+                    });
+                } else {
+                    $('#searchResults').hide();
+                }
+            });
+            $(document).on('click', function (event) {
+                if (!$(event.target).closest('#searchBox').length) {
+                    $('#searchResults').hide();
+                }
+            });
         });
 
         function vote(element) {
@@ -154,15 +225,19 @@
                     'what_user': whatUser,
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
-                success: function(response) {
+                success: function (response) {
                     $(element).parent().parent().find('.score').html(response.new_score);
                     console.log(response.new_score)
 
                     if (voteType === "up_vote") {
                         $(element).toggleClass('upvoted');
+                        $(element).parent().parent().find('.score').removeClass('downvoted');
+                        $(element).parent().parent().find('.score').toggleClass('upvoted');
                         $(element).parent().parent().find('.fa-chevron-down').removeClass('downvoted');
                     } else {
                         $(element).toggleClass('downvoted');
+                        $(element).parent().parent().find('.score').removeClass('upvoted');
+                        $(element).parent().parent().find('.score').toggleClass('downvoted');
                         $(element).parent().parent().find('.fa-chevron-up').removeClass('upvoted');
                     }
                 }

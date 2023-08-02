@@ -18,7 +18,7 @@ class Submission(models.Model):
 
 class Comment(models.Model):
     submission = models.ForeignKey(Submission, null=True, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='author_comments')
     author_name = models.CharField(null=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE,
                                null=True,
@@ -27,6 +27,17 @@ class Comment(models.Model):
     text = RichTextField(max_length=2000)
     score = models.IntegerField(default=0)
     timestamp = models.DateTimeField(default=timezone.now)
+
+    def set_votes(self, user):
+        self.up_voted = Vote.objects.filter(comment=self, author__user=user, up_vote=True).exists()
+        self.down_voted = Vote.objects.filter(comment=self, author__user=user, down_vote=True).exists()
+
+    def get_replies(self, user):
+        replies = Comment.objects.filter(parent=self).order_by('-score')
+        for reply in replies:
+            reply.set_votes(user)
+            reply.reply_list = reply.get_replies(user)
+        return replies
 
 
 class Vote(models.Model):

@@ -1,30 +1,37 @@
 {% load humanize %}
-<div class="comment">
+<div class="comment" style="border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-color: green">
     <div class="row" style="margin-left: 0%">
     <div class="vote"
          data-what-type="comment"
          data-what-id="{{ comment.id }}"
          data-what-user="{{ request.user }}"
          style="width: 2%">
-        <div><i class="fas fa-chevron-up {% if comment.up_voted %} upvoted {% endif %}"
+        <div><i class="fas fa-chevron-up fa-lg {% if comment.up_voted %} upvoted {% endif %}"
                 title="upvote" onclick="vote(this)"></i>
         </div>
-        <div class="score" style="padding-left: 3px" title="score">{{ comment.score }}</div>
-        <div><i class="fas fa-chevron-down {% if comment.down_voted %} downvoted {% endif %}"
+        <div class="score {% if comment.up_voted %} upvoted {% elif comment.down_voted %} downvoted {% endif %}" style="padding-left: 5px; font-size: 18px" title="score">{{ comment.score }}</div>
+        <div><i class="fas fa-chevron-down fa-lg {% if comment.down_voted %} downvoted {% endif %}"
                 title="downvote"
                 onclick="vote(this)"></i></div>
     </div>
-    <div style="width: 98%">
+    <div style="width: 98%; padding-left: 5px">
 
-        <a>Commented {{ comment.timestamp|naturaltime }} by </a>
-        <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=comment.author.user_id %}">
+        <a style="color: #959a99; font-size: 16px">Commented {{ comment.timestamp|naturaltime }} by </a>
+        <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=comment.author.user_id %}" style="color: #b0772c">
             {{ comment.author_name }} </a>
-        <p style="margin-top: 10px; font-family: Inter; font-size: 20px">{{ comment.text }}</p>
+        <p style="margin-top: 10px; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif">{{ comment.text }}</p>
 
     </div>
 </div>
 
-    <button class="reply-btn" data-commentid="{{ comment.id }}">Reply</button>
+    <button class="reply-btn" data-commentid="{{ comment.id }}" style="margin-top: 1%; width: 59px; height: 29px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 16px; font-style: normal">Reply</button>
 
     <div class="reply-form" id="reply-form-{{ comment.id }}" style="display:none;">
         <form method="post">
@@ -32,12 +39,13 @@
             <label for="comment"> Reply:</label>
             <input type="text" id="text" name="text" class="form-control" required>
             <input type="hidden" id="parent_comment" name="parent_comment" value="{{ comment.id }}">
-            <button type="submit" name="reply">Submit Reply</button>
+            <button type="submit" name="reply" style="margin-top: 1%; width: 108px; height: 29px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 16px; font-style: normal">Submit Reply</button>
         </form>
     </div>
 
     <div class="replies">
-        {% for reply in comment.replies.all %}
+        {% for reply in comment.reply_list %}
             <div class="reply">
                 {% with comment=reply %}
                     {% include 'ciesza_comment.html' %}

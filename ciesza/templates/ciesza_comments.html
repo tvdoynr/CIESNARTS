@@ -12,30 +12,36 @@
     </style>
 </head>
 <body>
-<h2 style="margin-left: 6px"> {{ submission.title }}</h2>
-<div class="row">
+<h2 style="margin-left: 12px"> {{ submission.title }}</h2>
+<div class="row" style="border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-color: green">
     <div class="vote"
          data-what-type="submission"
          data-what-id="{{ submission.id }}"
          data-what-user="{{ request.user }}"
          style="width: 2%">
-        <div><i class="fas fa-chevron-up {% if  submission.up_voted %} upvoted {% endif %}"
+        <div><i class="fas fa-chevron-up fa-lg {% if  submission.up_voted %} upvoted {% endif %}"
                 title="upvote" onclick="vote(this)"></i>
         </div>
-        <div class="score" style="padding-left: 3px" title="score">{{ submission.score }}</div>
-        <div><i class="fas fa-chevron-down {% if  submission.down_voted %} downvoted {% endif %}"
+        <div class="score {% if submission.up_voted %} upvoted {% elif submission.down_voted %} downvoted {% endif %}" style="padding-left: 5px; font-size: 18px" title="score">{{ submission.score }}</div>
+        <div><i class="fas fa-chevron-down fa-lg {% if  submission.down_voted %} downvoted {% endif %}"
                 title="downvote"
                 onclick="vote(this)"></i></div>
     </div>
-    <div style="width: 98%">
+    <div style="width: 98%; padding-left: 7px">
 
-        <a>Posted {{ submission.timestamp|naturaltime }} by</a>
-        <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}"> {{ submission.author_name }} </a>
-        <p style="margin-top: 20px; font-size: 20px; font-family: Inter">{{ submission.text }}</p>
+        <a style="color: #959a99; font-size: 16px">Posted {{ submission.timestamp|naturaltime }} by</a>
+        <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}" style="color: #b0772c"> {{ submission.author_name }} </a>
+        <p style="margin-top: 20px; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif;">{{ submission.text }}</p>
 
     </div>
 </div>
-<div>
+<div style="padding-left: 7px">
     <h3>Comments</h3>
     <form method="post">
         {% csrf_token %}
@@ -43,7 +49,8 @@
         <div class="form-group">
             <label for="comment">New Comment:</label>
             <input type="text" id="text" name="text" class="form-control" required>
-            <button type="submit" name="comment">Comment</button>
+            <button type="submit" name="comment" style="margin-top: 1%; width: 85px; height: 29px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 16px; font-style: normal">Comment</button>
         </div>
     </form>
     <br>
@@ -99,9 +106,14 @@
                     // Toggle the upvoted or downvoted class
                     if (voteType === "up_vote") {
                         $(element).toggleClass('upvoted');
+                        console.log(element)
+                        $(element).parent().parent().find('.score').removeClass('downvoted');
+                        $(element).parent().parent().find('.score').toggleClass('upvoted');
                         $(element).parent().parent().find('.fa-chevron-down').removeClass('downvoted');
                     } else {
                         $(element).toggleClass('downvoted');
+                        $(element).parent().parent().find('.score').removeClass('upvoted');
+                        $(element).parent().parent().find('.score').toggleClass('downvoted');
                         $(element).parent().parent().find('.fa-chevron-up').removeClass('upvoted');
                     }
                 }

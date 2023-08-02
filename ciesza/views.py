@@ -6,13 +6,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Value, Case, When, BooleanField
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
-from accounts.models import Course, Profile
+from accounts.models import Course, Profile, Semester
 from ciesza.forms import ChangeAuthorNameForm
 from ciesza.models import Submission, Comment, Vote
 
@@ -49,10 +50,13 @@ class SubmissionView(View):
         submissions_page_number = request.GET.get('page')
         submissions_page_obj = paginator_submissions.get_page(submissions_page_number)
 
+        most_upvoted_comment = Comment.objects.order_by('-score').first()
+
         context = {
             'course': course,
             'submissions_page_obj': submissions_page_obj,
-            'course_id': course_id
+            'course_id': course_id,
+            'most_upvoted_comment': most_upvoted_comment,
         }
 
         return render(request, 'ciesza_submissions.html', context)
@@ -141,10 +145,12 @@ class SubmitView(View):
         course = Course.objects.get(pk=course_id)
         author = Profile.objects.get(user=request.user)
 
+        author_name = author.nickname if author.nickname else author.user.username
+
         submission = Submission.objects.create(
             course=course,
             author=author,
-            author_name=author.user_id,
+            author_name=author_name,
             title=title,
             text=text,
         )
@@ -166,10 +172,8 @@ class CommentsView(View):
                                                     down_vote=True).exists()
 
         for comment in comments:
-            comment.up_voted = Vote.objects.filter(comment=comment, author__user=request.user,
-                                                   up_vote=True).exists()
-            comment.down_voted = Vote.objects.filter(comment=comment, author__user=request.user,
-                                                     down_vote=True).exists()
+            comment.set_votes(request.user)
+            comment.reply_list = comment.get_replies(request.user)
 
         context = {
             'comments': comments,
@@ -185,10 +189,12 @@ class CommentsView(View):
             submission = Submission.objects.get(pk=submission_id)
             author = Profile.objects.get(user=request.user)
 
+            author_name = author.nickname if author.nickname else author.user.username
+
             comment = Comment.objects.create(
                 submission=submission,
                 author=author,
-                author_name=author.user_id,
+                author_name=author_name,
                 text=text
             )
             comment.save()
@@ -202,10 +208,12 @@ class CommentsView(View):
             author = Profile.objects.get(user=request.user)
             parent_comment = Comment.objects.get(pk=parent_id)
 
+            author_name = author.nickname if author.nickname else author.user.username
+
             comment = Comment.objects.create(
                 submission=submission,
                 author=author,
-                author_name=author.user_id,
+                author_name=author_name,
                 text=text,
                 parent=parent_comment
             )
@@ -312,9 +320,18 @@ class CieszaProfileView(View):
             submission.down_voted = Vote.objects.filter(submission=submission, author__user=request.user,
                                                         down_vote=True).exists()
 
-        sections = author.enrolled_sections.all()
+        current_date = timezone.now().date()
+        semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
 
-        courses = [section.course for section in sections]
+        courses = Course.objects.filter(sections__students=author).annotate(
+            is_current_semester=Case(
+                When(semester=semester, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+        ).order_by("-is_current_semester", "course_id")
+
+
 
         paginator_submissions = Paginator(submissions, 10)
         submissions_page = request.GET.get('page')
@@ -426,6 +443,9 @@ class CieszaProfileEditView(View):
                 author = Profile.objects.get(user=user)
                 Submission.objects.filter(author=author).update(author_name=author_name)
                 Comment.objects.filter(author=author).update(author_name=author_name)
+                author.nickname = author_name
+                author.save()
+
                 messages.success(request, "The author name has been changed successfully!")
             else:
                 messages.success(request, "The password is invalid!")

@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>Submit a New Submission</h1>
+<h3 style="margin-top: 4%; margin-left: 30%; color: #032D23; font-family: Playfair Display; font-size: 44px">Submit a New Submission</h3>
 
 <form action="{% url 'SubmitPage' course_id=course_id %}" method="post">
     {% csrf_token %}
@@ -30,7 +30,8 @@
     </div>
     -->
 
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button type="submit" style="width: 75px; height: 38px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal">Submit</button>
 
 </form>
 
