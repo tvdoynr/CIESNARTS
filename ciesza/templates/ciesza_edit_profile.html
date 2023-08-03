@@ -1,4 +1,5 @@
 {% extends 'ciesza_base.html' %}
+{% load crispy_forms_tags %}
 
 {% block title %}Profile Page{% endblock %}
 
@@ -7,12 +8,13 @@
     <div class="row">
         <div class="col-md-3"></div>
         <div class="col-md-6">
-            <h2> Change Your Author Name</h2>
+            <h3 style="margin-top: 4%; margin-bottom: 5%; color: #032D23; font-family: Playfair Display; font-size: 40px"> Change Your Author Name</h3>
             <form method="post">
                 {% csrf_token %}
-                {{ author_name_form.as_p }}
+                {{ author_name_form|crispy }}
                 <input type="checkbox" onclick="showPassword('id_confirm_password')">Show Password
-                <button type="submit" name="author_change"> Confirm</button>
+                <button type="submit" name="author_change" style="width: 285px; height: 54px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 18px; font-style: normal; float: right"> Confirm</button>
             </form>
         </div>
         <div class="col-md-3"></div>

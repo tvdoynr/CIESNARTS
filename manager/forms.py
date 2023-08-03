@@ -81,12 +81,12 @@ class SectionForm(forms.ModelForm):
 
     class Meta:
         model = Section
-        fields = ['Classroom', 'Instructor']
+        fields = ['classroom', 'instructor']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['Instructor'].queryset = User.objects.filter(profile__user_type='instructor')
-        self.fields['Instructor'].label_from_instance = self.label_from_instance
+        self.fields['instructor'].queryset = User.objects.filter(profile__user_type='instructor')
+        self.fields['instructor'].label_from_instance = self.label_from_instance
 
 
 class DateInput(forms.DateInput):
@@ -99,13 +99,13 @@ class SemesterForm(forms.ModelForm):
         fields = ['name', 'start_date', 'finish_date']
         widgets = {
             'name': TextInput(
-                attrs={'style':'max-width: 215px'}
+                attrs={'style': 'max-width: 215px'}
             ),
             'start_date': DateInput(
-                attrs={'style':'max-width: 215px'}
+                attrs={'style': 'max-width: 215px'}
             ),
             'finish_date': DateInput(
-                attrs={'style':'max-width: 215px'}),
+                attrs={'style': 'max-width: 215px'}),
         }
 
     def clean(self):
@@ -129,24 +129,6 @@ class SemesterForm(forms.ModelForm):
                     "The new semester's dates overlap with an existing semester!!!"
                 )
 
-'''class CreateUserForm(forms.Form):
-    first_name = forms.CharField()
-    last_name = forms.CharField()
-    id = forms.CharField(
-        max_length=10,
-        validators=[
-            RegexValidator(
-                regex='^[0-9]*$',
-                message='Username must be Numeric',
-                code='invalid_username'
-            ),
-        ]
-    )
-    email = forms.EmailField(
-        error_messages={
-            'invalid': 'The email format is invalid.',
-        }
-    )
-    user_type = forms.ChoiceField(
-        choices=Profile.USER_TYPE_CHOICES
-    )'''
+
+class ProfileForm(forms.Form):
+    profile_picture = forms.ImageField()

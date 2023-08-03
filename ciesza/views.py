@@ -7,13 +7,13 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import Q, Value, Case, When, BooleanField
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.http import JsonResponse, HttpResponseForbidden
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
-from accounts.models import Course, Profile, Semester
+from accounts.models import Course, Profile, Semester, Section
 from ciesza.forms import ChangeAuthorNameForm
 from ciesza.models import Submission, Comment, Vote
 
@@ -37,20 +37,50 @@ def user_has_role(*roles):
 @method_decorator(user_has_role("student", "instructor"), name='dispatch')
 class SubmissionView(View):
     def get(self, request, course_id):
-        course = Course.objects.get(pk=course_id)
+        course = get_object_or_404(Course, id=course_id)
+
+        if not course.is_student_enrolled(request.user.profile) and request.user.profile.user_type == 'student':
+            return HttpResponseForbidden("You do not have access to this course.")
+
+        if request.user.profile.user_type == 'instructor':
+            check_flag = Section.objects.filter(course=course, instructor=request.user).exists()
+            if not check_flag:
+                return HttpResponseForbidden("You do not have access to this course.")
+
         submissions = course.submissions.all().order_by('-score')
 
+        up_votes = Vote.objects.filter(
+            Q(submission__in=submissions),
+            Q(author__user=request.user),
+            Q(up_vote=True)
+        ).values_list('submission_id', flat=True)
+
+        down_votes = Vote.objects.filter(
+            Q(submission__in=submissions),
+            Q(author__user=request.user),
+            Q(down_vote=True)
+        ).values_list('submission_id', flat=True)
+
+        up_votes_set = set(up_votes)
+        down_votes_set = set(down_votes)
+
+        for submission in submissions:
+            submission.up_voted = submission.id in up_votes_set
+            submission.down_voted = submission.id in down_votes_set
+
+        '''
         for submission in submissions:
             submission.up_voted = Vote.objects.filter(submission=submission, author__user=request.user,
                                                       up_vote=True).exists()
             submission.down_voted = Vote.objects.filter(submission=submission, author__user=request.user,
                                                         down_vote=True).exists()
+        '''
 
-        paginator_submissions = Paginator(submissions, 20)
+        paginator_submissions = Paginator(submissions, 5)
         submissions_page_number = request.GET.get('page')
         submissions_page_obj = paginator_submissions.get_page(submissions_page_number)
 
-        most_upvoted_comment = Comment.objects.order_by('-score').first()
+        most_upvoted_comment = Comment.objects.filter(submission__course=course).order_by('-score').first()
 
         context = {
             'course': course,
@@ -123,8 +153,8 @@ class SubmissionView(View):
 class SearchSubmissionsView(View):
     def get(self, request, course_id):
         query = request.GET.get('title', '')
-        submissions = Submission.objects.filter(Q(course_id=course_id), Q(title__icontains=query))[:5]  # limit to 5 results for performance
-        submissions_json = list(submissions.values('title', 'id'))  # convert to JSON-compatible data
+        submissions = Submission.objects.filter(Q(course_id=course_id), Q(title__icontains=query))[:5]
+        submissions_json = list(submissions.values('title', 'id'))
         return JsonResponse(submissions_json, safe=False)
 
 
@@ -132,6 +162,16 @@ class SearchSubmissionsView(View):
 @method_decorator(user_has_role("student", "instructor"), name="dispatch")
 class SubmitView(View):
     def get(self, request, course_id):
+        course = get_object_or_404(Course, id=course_id)
+
+        if not course.is_student_enrolled(request.user.profile) and request.user.profile.user_type == 'student':
+            return HttpResponseForbidden("You do not have access to this course.")
+
+        if request.user.profile.user_type == 'instructor':
+            check_flag = Section.objects.filter(course=course, instructor=request.user).exists()
+            if not check_flag:
+                return HttpResponseForbidden("You do not have access to this course.")
+
         context = {
             'course_id': course_id,
         }
@@ -156,15 +196,25 @@ class SubmitView(View):
         )
         submission.save()
 
-        return redirect(reverse('SubmissionsPage', args=course_id))
+        return redirect(reverse('SubmissionsPage', args=(course_id,)))
 
 
 @method_decorator(login_required, name="dispatch")
 @method_decorator(user_has_role("student", "instructor"), name="dispatch")
 class CommentsView(View):
     def get(self, request, course_id, submission_id):
+        course = get_object_or_404(Course, id=course_id)
+
+        if not course.is_student_enrolled(request.user.profile) and request.user.profile.user_type == 'student':
+            return HttpResponseForbidden("You do not have access to this course.")
+
+        if request.user.profile.user_type == 'instructor':
+            check_flag = Section.objects.filter(course=course, instructor=request.user).exists()
+            if not check_flag:
+                return HttpResponseForbidden("You do not have access to this course.")
+
         comments = Comment.objects.filter(submission_id=submission_id, parent_id__isnull=True).order_by('-score')
-        submission = Submission.objects.get(pk=submission_id)
+        submission = get_object_or_404(Submission, id=submission_id)
 
         submission.up_voted = Vote.objects.filter(submission=submission, author__user=request.user,
                                                   up_vote=True).exists()
@@ -311,6 +361,16 @@ class CommentsView(View):
 @method_decorator(user_has_role('student', 'instructor'), name='dispatch')
 class CieszaProfileView(View):
     def get(self, request, course_id, user_id):
+        course = get_object_or_404(Course, id=course_id)
+
+        if not course.is_student_enrolled(request.user.profile) and request.user.profile.user_type == 'student':
+            return HttpResponseForbidden("You do not have access to this course.")
+
+        if request.user.profile.user_type == 'instructor':
+            check_flag = Section.objects.filter(course=course, instructor=request.user).exists()
+            if not check_flag:
+                return HttpResponseForbidden("You do not have access to this course.")
+
         author = Profile.objects.get(user_id=user_id)
         submissions = Submission.objects.filter(author=author, course_id=course_id).order_by('-score')
 
@@ -421,6 +481,19 @@ class CieszaProfileView(View):
 @method_decorator(user_has_role('student', 'instructor'), name='dispatch')
 class CieszaProfileEditView(View):
     def get(self, request, course_id, user_id):
+        course = get_object_or_404(Course, id=course_id)
+
+        if not course.is_student_enrolled(request.user.profile) and request.user.profile.user_type == 'student':
+            return HttpResponseForbidden("You do not have access to this course.")
+
+        if request.user.profile.user_type == 'instructor':
+            check_flag = Section.objects.filter(course=course, instructor=request.user).exists()
+            if not check_flag:
+                return HttpResponseForbidden("You do not have access to this course.")
+
+        if user_id != request.user.pk:
+            return HttpResponseForbidden("You do not have access to this profile!!")
+
         author_name_form = ChangeAuthorNameForm()
 
         context = {

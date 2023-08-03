@@ -3,15 +3,17 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.core.files.images import ImageFile
 from django.core.paginator import Paginator
-from django.shortcuts import render, redirect
+from django.http import HttpResponseForbidden
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
-from accounts.models import Section, Profile, Transcript, Grade, Course, Semester
+from accounts.models import Section, Profile, Transcript, Grade, Course, Semester, Image
 from announcements import get_announcements
-from .forms import ChangeEmailForm, ChangePasswordForm
+from .forms import ChangeEmailForm, ChangePasswordForm, ProfileForm
 from django.db.models import Case, When, Value, BooleanField
 
 
@@ -41,6 +43,16 @@ class InstructorView(View):
         current_date = timezone.now().date()
         semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
 
+        if semester is None:
+            semester = Semester.objects.filter(finish_date__lte=current_date).last()
+            if semester is None:
+                context = {
+                    'announcements_obj': announcements_obj,
+                    'semester': semester,
+                }
+
+                return render(request, "instructor_dashboard.html", context)
+
         total_length = semester.semester_length()
         elapsed_length = semester.elapsed_days()
         percentage_complete = min(100, max(0, (elapsed_length / total_length) * 100))
@@ -62,9 +74,9 @@ class InstructorCoursesView(View):
         current_date = timezone.now().date()
         semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
 
-        active_courses = Section.objects.filter(Instructor=instructor,
+        active_courses = Section.objects.filter(instructor=instructor,
                                                 course__semester=semester).order_by('course__course_id')
-        enrolled_courses = Course.objects.filter(sections__Instructor=instructor).annotate(
+        enrolled_courses = Course.objects.filter(sections__instructor=instructor).annotate(
             is_current_semester=Case(
                 When(semester=semester, then=Value(True)),
                 default=Value(False),
@@ -94,7 +106,13 @@ class InstructorCoursesView(View):
 @method_decorator(user_is_instructor, name="dispatch")
 class InstructorGradeView(View):
     def get(self, request, section_id):
-        section = Section.objects.get(pk=section_id)
+        section = get_object_or_404(Section, id=section_id)
+
+        user_section = Section.objects.filter(instructor=request.user, pk=section_id)
+
+        if not user_section.exists():
+            return HttpResponseForbidden("You are not an instructor for this section.")
+
         students = section.students.all().order_by('id')
 
         for student in students:
@@ -125,7 +143,7 @@ class InstructorGradeView(View):
             for student_id, grade in zip(student_ids, grades):
                 if float(grade) < 0 or float(grade) > 100:
                     messages.success(request, "Grade should be between 0 and 100")
-                    return redirect(reverse("InstructorGradesPage", args=section_id))
+                    return redirect(reverse("InstructorGradesPage", args=(section_id,)))
                 student = Profile.objects.get(pk=student_id)
 
                 transcript, created = Transcript.objects.get_or_create(student=student)
@@ -172,14 +190,21 @@ class InstructorAccountView(View):
     def get(self, request):
         password_form = ChangePasswordForm()
         email_form = ChangeEmailForm()
+        profile_form = ProfileForm()
 
-        return render(request, "instructor_account.html", {"email_form": email_form,
-                                                           "password_form": password_form})
+        context = {
+            "email_form": email_form,
+            "password_form": password_form,
+            'profile_form': profile_form,
+        }
+
+        return render(request, "instructor_account.html", context)
 
     def post(self, request):
         if "password" in request.POST:
             password_form = ChangePasswordForm(request.POST)
             email_form = ChangeEmailForm()
+            profile_form = ProfileForm()
             if password_form.is_valid():
                 current_password = password_form.cleaned_data.get("current_password")
                 new_password = password_form.cleaned_data.get("new_password")
@@ -198,6 +223,7 @@ class InstructorAccountView(View):
         elif "email" in request.POST:
             email_form = ChangeEmailForm(request.POST)
             password_form = ChangePasswordForm()
+            profile_form = ProfileForm()
             if email_form.is_valid():
                 new_email_address = email_form.cleaned_data.get('new_email_address')
                 confirm_password = email_form.cleaned_data.get('confirm_password')
@@ -214,11 +240,32 @@ class InstructorAccountView(View):
                 else:
                     messages.success(request, 'The password is wrong!')
 
-        else:
+        elif "profile" in request.POST:
+            profile_form = ProfileForm(request.POST, request.FILES)
             password_form = ChangePasswordForm()
             email_form = ChangeEmailForm()
 
-        return render(request, "instructor_account.html", {"password_form": password_form, 'email_form': email_form})
+            if profile_form.is_valid():
+                image_file = profile_form.cleaned_data['profile_picture']
+
+                try:
+                    img_obj = Image.objects.get(image=image_file.name)
+                except Image.DoesNotExist:
+                    img_obj = Image(image=ImageFile(image_file))
+                    img_obj.save()
+
+                request.user.profile.profile_picture = img_obj
+                request.user.profile.save()
+                messages.success(request, 'The profile picture has been changed successfully')
+
+        else:
+            password_form = ChangePasswordForm()
+            email_form = ChangeEmailForm()
+            profile_form = ProfileForm()
+
+        return render(request, "instructor_account.html", {"password_form": password_form,
+                                                           'email_form': email_form,
+                                                           'profile_form': profile_form})
 
 
 @method_decorator(login_required, name="dispatch")

@@ -4,9 +4,14 @@
 {% block title %}Account Page{% endblock %}
 
 {% block content %}
+    <style>
+        .container {
+            max-width: 1340px;
+        }
+    </style>
     <div class="row">
-        <div class="col-md-6" style="margin-top: 4%; padding-left: 8%">
-            <h2> Change Your Password</h2>
+        <div class="col-md-4" style="margin-top: 4%; padding-left: 8%">
+            <h3 style="margin-top: 4%; margin-bottom: 5%; color: #032D23; font-family: Playfair Display; font-size: 40px"> Change Your Password</h3>
             <form method="post">
                 {% csrf_token %}
                 {{ password_form|crispy }}
@@ -16,8 +21,8 @@
                     color: white; font-family: Inter; font-size: 20px; font-style: normal">Confirm</button>
             </form>
         </div>
-        <div class="col-md-6" style="margin-top: 4%; padding-left: 4%">
-            <h2> Change Your Email</h2>
+        <div class="col-md-4" style="margin-top: 4%; padding-left: 4%">
+            <h3 style="margin-top: 4%; margin-bottom: 5%; color: #032D23; font-family: Playfair Display; font-size: 40px"> Change Your Email</h3>
             <form method="post">
                 {% csrf_token %}
                 {{ email_form|crispy }}
@@ -26,6 +31,21 @@
                 <button type="submit" name="email" style="width: 385px; height: 64px; flex-shrink: 0; border-radius: 6px; background: #032D23;
                     color: white; font-family: Inter; font-size: 20px; font-style: normal">Confirm</button>
             </form>
+        </div>
+        <div class="col-md-4" style="margin-top: 4%; padding-left: 4%">
+            <h3 style="margin-top: 4%; margin-bottom: 5%; color: #032D23; font-family: Playfair Display; font-size: 40px">
+                Change Your Profile Picture</h3>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if request.user.profile.profile_picture %}
+                    <img src="{{ request.user.profile.profile_picture.image.url }}" alt="Profile Picture" style="width: 290px; height: 330px">
+                {% endif %}
+                <h3>Available Images</h3>
+                {{ profile_form.as_p }}
+                <button type="submit" name="profile" style="width: 172px; height: 41px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 20px; font-style: normal">Confirm</button>
+            </form>
+
         </div>
     </div>
     {% if messages %}

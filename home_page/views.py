@@ -35,7 +35,6 @@ class Homeview(View):
 
             else:
                 messages.success(request, 'There is no user or password is wrong')
-                print("There is no user")
 
         return render(request, "home.html", {"form": form})
 

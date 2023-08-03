@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container">
-    <h1 style="color: #032D23; font-family: Playfair Display; font-size: 45px"> General Informations for Student</h1>
+    <h3 style="margin-top: 2%; margin-bottom: 2%; margin-left: 27%; color: #032D23; font-family: Playfair Display; font-size: 40px"> General Informations for Student</h3>
         <li class="list-group-item">
             <label>
                 Course Code: {{ course.course_id }}
@@ -34,15 +34,15 @@
                             <input type="hidden" name="section_id" value="{{ section.id }}">
                             <button type="submit" class="list-group-item list-group-item-action" id="section-{{ section.id }}">
                                 <label>
-                                    Number of the students :{{ section.NumberOfStudents}}
+                                    Number of the students :{{ section.number_of_students }}
                                 </label>
                                 <br>
                                 <label>
-                                    Classroom :{{ section.Classroom}}
+                                    Classroom :{{ section.classroom }}
                                 </label>
                                 <br>
                                 <label>
-                                    Instructor :{{ section.Instructor.first_name}} {{ section.Instructor.last_name}}
+                                    Instructor :{{ section.instructor.first_name}} {{ section.instructor.last_name}}
                                 </label>
                             </button>
                         </form>
@@ -50,8 +50,8 @@
                                 '{{ bins|escapejs|safe }}',
                                 '{{ section.id }}',
                                 '{{ course.course_id }}',
-                                '{{ section.Instructor.first_name }}',
-                                '{{ section.Instructor.last_name }}')"></i>
+                                '{{ section.instructor.first_name }}',
+                                '{{ section.instructor.last_name }}')"></i>
 
 
                         <div id="modal-{{ forloop.counter0 }}" class="modal">
@@ -106,6 +106,24 @@
                             ticks: {
                                 stepSize: 1,  // This ensures the x-axis uses integers
                                 beginAtZero: true
+                            },
+                            title: {
+                                display: true,
+                                text: "Students Number",
+                                color: "#ce2929",
+                                font:{
+                                    size: 16,
+                                }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: "Letter Grades",
+                                color: "#ce2929",
+                                font:{
+                                    size: 16,
+                                }
                             }
                         }
                     },

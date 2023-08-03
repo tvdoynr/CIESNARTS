@@ -37,7 +37,7 @@
 
         <a style="color: #959a99; font-size: 16px">Posted {{ submission.timestamp|naturaltime }} by</a>
         <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}" style="color: #b0772c"> {{ submission.author_name }} </a>
-        <p style="margin-top: 20px; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif;">{{ submission.text }}</p>
+        <p style="margin-top: 20px; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif;">{{ submission.text|safe }}</p>
 
     </div>
 </div>

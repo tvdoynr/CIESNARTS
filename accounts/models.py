@@ -3,6 +3,10 @@ from django.db import models
 from django.utils import timezone
 
 
+class Image(models.Model):
+    image = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     USER_TYPE_CHOICES = (
@@ -12,6 +16,7 @@ class Profile(models.Model):
     )
     nickname = models.CharField(max_length=30, blank=True, null=True)
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='student')
+    profile_picture = models.ForeignKey(Image, on_delete=models.SET_NULL, null=True, default=6)
 
 
 class Semester(models.Model):
@@ -65,13 +70,13 @@ class Course(models.Model):
 
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='sections')
-    NumberOfStudents = models.IntegerField()
-    Classroom = models.CharField(max_length=100)
-    Instructor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    number_of_students = models.IntegerField()
+    classroom = models.CharField(max_length=100)
+    instructor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     students = models.ManyToManyField(Profile, related_name='enrolled_sections')
 
     def can_be_added(self):
-        return self.NumberOfStudents < 40
+        return self.number_of_students < 40
 
     def __str__(self):
         section_id = self.id % 3

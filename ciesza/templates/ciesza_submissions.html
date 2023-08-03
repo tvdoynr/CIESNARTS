@@ -51,19 +51,7 @@
 
     <div class="row">
         <div class="col-md-3">
-            <h3 style="margin-top: 8%; margin-left: 0%; color: #032D23; font-family: Playfair Display; font-size: 32px">
-                Highest Scored Profile</h3>
-            <div style="border: 1px solid #ddd;
-            padding: 15px;
-            margin-top: 10%;
-            margin-bottom: 10px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            border-color: green">
-                <p>{{ highest_scored_profile.user.username }}</p>
-                <p>Total Score: {{ highest_scored_profile.total_score }}</p>
-            </div>
+
         </div>
         <div class="col-md-6">
 
@@ -147,6 +135,7 @@
             </nav>
         </div>
         <div class="col-md-3" style="margin-right: 0%">
+            {% if most_upvoted_comment %}
             <h3 style="margin-top: 8%; margin-left: 0%; color: #032D23; font-family: Playfair Display; font-size: 32px">
                 Most Upvoted Comment</h3>
             <div style="border: 1px solid #ddd;
@@ -165,11 +154,12 @@
                    style="color: #b0772c">
                     {{ most_upvoted_comment.author_name }} </a>
                 <p style="margin-top: 5%">Score: {{ most_upvoted_comment.score }}</p>
-
+                <a href="{% url 'CommentsPage' course_id=course_id submission_id=most_upvoted_comment.submission_id %}" style="color: #b0772c">Go to Post</a>
                 <a> </a>
 
 
             </div>
+            {% endif %}
         </div>
     </div>
 

@@ -1,6 +1,8 @@
 from django import forms
 from django.core.validators import RegexValidator
 
+from accounts.models import Profile, Image
+
 
 class ChangePasswordForm(forms.Form):
     current_password = forms.CharField(max_length=16, widget=forms.PasswordInput)
@@ -23,3 +25,6 @@ class ChangeEmailForm(forms.Form):
         }
     )
     confirm_password = forms.CharField(max_length=16, widget=forms.PasswordInput)
+
+class ProfileForm(forms.Form):
+    profile_picture = forms.ImageField()

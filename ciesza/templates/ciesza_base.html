@@ -57,7 +57,7 @@
 
                 {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'StudentLogout' %}">Logout</a>
+                    <a class="nav-link" href="{% if request.user.profile.user_type == 'student' %}{% url 'StudentLogout' %}{% else %}{% url 'InstructorLogout' %}{% endif %}">Logout</a>
                 </li>
                 {% endif %}
 

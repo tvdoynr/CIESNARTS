@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.core.files.images import ImageFile
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db.models import Avg
@@ -19,8 +20,9 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 from announcements import get_announcements
-from .forms import ChangeEmailForm, ChangePasswordForm, CourseForm, SemesterForm, CreateUserForm, SectionForm
-from accounts.models import Course, Profile, Semester, Section, Grade
+from .forms import ChangeEmailForm, ChangePasswordForm, CourseForm, SemesterForm, CreateUserForm, SectionForm, \
+    ProfileForm
+from accounts.models import Course, Profile, Semester, Section, Grade, Image
 
 
 def user_is_manager(function):
@@ -49,6 +51,16 @@ class ManagerView(View):
         current_date = timezone.now().date()
         semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
 
+        if semester is None:
+            semester = Semester.objects.filter(finish_date__lte=current_date).last()
+            if semester is None:
+                context = {
+                    'announcements_obj': announcements_obj,
+                    'semester': semester,
+                }
+
+                return render(request, "manager_dashboard.html", context)
+
         total_length = semester.semester_length()
         elapsed_length = semester.elapsed_days()
         percentage_complete = min(100, max(0, (elapsed_length / total_length) * 100))
@@ -74,14 +86,21 @@ class ManagerAccountView(View):
     def get(self, request):
         password_form = ChangePasswordForm()
         email_form = ChangeEmailForm()
+        profile_form = ProfileForm()
 
-        return render(request, "manager_account.html", {"email_form": email_form,
-                                                        "password_form": password_form})
+        context = {
+            "email_form": email_form,
+            "password_form": password_form,
+            'profile_form': profile_form,
+        }
+
+        return render(request, "manager_account.html", context)
 
     def post(self, request):
         if "password" in request.POST:
             password_form = ChangePasswordForm(request.POST)
             email_form = ChangeEmailForm()
+            profile_form = ProfileForm()
             if password_form.is_valid():
                 current_password = password_form.cleaned_data.get("current_password")
                 new_password = password_form.cleaned_data.get("new_password")
@@ -99,6 +118,7 @@ class ManagerAccountView(View):
         elif "email" in request.POST:
             email_form = ChangeEmailForm(request.POST)
             password_form = ChangePasswordForm()
+            profile_form = ProfileForm()
             if email_form.is_valid():
                 new_email_address = email_form.cleaned_data.get('new_email_address')
                 confirm_password = email_form.cleaned_data.get('confirm_password')
@@ -112,12 +132,32 @@ class ManagerAccountView(View):
                 else:
                     messages.success(request, 'The password is wrong!')
 
-        else:
+        elif "profile" in request.POST:
+            profile_form = ProfileForm(request.POST, request.FILES)
             password_form = ChangePasswordForm()
             email_form = ChangeEmailForm()
 
+            if profile_form.is_valid():
+                image_file = profile_form.cleaned_data['profile_picture']
+
+                try:
+                    img_obj = Image.objects.get(image=image_file.name)
+                except Image.DoesNotExist:
+                    img_obj = Image(image=ImageFile(image_file))
+                    img_obj.save()
+
+                request.user.profile.profile_picture = img_obj
+                request.user.profile.save()
+                messages.success(request, 'The profile picture has been changed successfully')
+
+        else:
+            password_form = ChangePasswordForm()
+            email_form = ChangeEmailForm()
+            profile_form = ProfileForm()
+
         return render(request, "manager_account.html", {"password_form": password_form,
-                                                        'email_form': email_form})
+                                                        'email_form': email_form,
+                                                        'profile_form': profile_form})
 
 
 @method_decorator(login_required, name="dispatch")
@@ -305,17 +345,17 @@ class CourseEditView(View):
         for past_course in past_courses:
             past_sections = past_course.sections.all()
             for section in past_sections:
-                if section.Instructor:
+                if section.instructor:
                     avg_grade = Grade.objects.filter(course=past_course,
-                                                     instructor=section.Instructor).aggregate(Avg('value'))['value__avg']
+                                                     instructor=section.instructor).aggregate(Avg('value'))['value__avg']
                     count = Grade.objects.filter(course=past_course,
-                                                 instructor=section.Instructor).count()
+                                                 instructor=section.instructor).count()
 
                     if avg_grade is None:
                         avg_grade = 0
 
                     instructor_info.append({
-                        'instructor': section.Instructor.first_name + " " + section.Instructor.last_name,
+                        'instructor': section.instructor.first_name + " " + section.instructor.last_name,
                         'avg_grade': avg_grade,
                         'count': count,
                     })
@@ -324,16 +364,16 @@ class CourseEditView(View):
 
         instructor_info = list({v['instructor']: v for v in instructor_info}.values())
 
-        initial_data_classroom = [{'classroom': section.Classroom or None} for section in sections]
-        initial_data_instructors = [{'instructor': section.Instructor or None} for section in sections]
+        initial_data_classroom = [{'classroom': section.classroom or None} for section in sections]
+        initial_data_instructors = [{'instructor': section.instructor or None} for section in sections]
 
         section_formset = self.section_formset_class(initial=initial_data_classroom)
 
         for i, form in enumerate(section_formset):
             classroom = initial_data_classroom[i]['classroom']
-            form.initial['Classroom'] = classroom
+            form.initial['classroom'] = classroom
             instructors = initial_data_instructors[i]['instructor']
-            form.initial['Instructor'] = instructors
+            form.initial['instructor'] = instructors
 
         instructors = [info['instructor'] for info in instructor_info]
         avg_grades = [info['avg_grade'] for info in instructor_info]
@@ -360,10 +400,10 @@ class CourseEditView(View):
         section_formset = self.section_formset_class(request.POST)
         if section_formset.is_valid():
             for i, form in enumerate(section_formset):
-                classroom = form.cleaned_data.get('Classroom')
-                instructor = form.cleaned_data.get('Instructor')
+                classroom = form.cleaned_data.get('classroom')
+                instructor = form.cleaned_data.get('instructor')
                 section_id = sections_id_list[i]
-                Section.objects.filter(pk=section_id).update(Classroom=classroom, Instructor=instructor)
+                Section.objects.filter(pk=section_id).update(classroom=classroom, instructor=instructor)
             course.is_active = True
             course.save()
             return redirect(reverse('CreateCoursePage'))

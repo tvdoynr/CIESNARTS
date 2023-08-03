@@ -4,58 +4,61 @@
     <div class="row">
         <div class="col-md-6" style="margin-top: 3%">
 
-          <h3>Active Courses</h3>
+            <h3 style="margin-top: 0%; margin-left: 25%; color: #032D23; font-family: Playfair Display; font-size: 40px">
+                Active Courses</h3>
+            <hr>
 
-        <div style="margin-top: 5%; width: 464px; height: 406px; border-radius: 8px; overflow: hidden; border: 0.50px #EEEEEE solid; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: inline-flex">
-            {% for can_enroll_course in active_page_obj %}
+
+            <div style="margin-top: 5%; width: 464px; height: 406px; border-radius: 8px; overflow: hidden; border: 0.50px #EEEEEE solid; flex-direction: column; justify-content: flex-start; align-items: flex-start; display: inline-flex">
+                {% for can_enroll_course in active_page_obj %}
 
                     <div class="courses" data-id="{{ can_enroll_course.pk }}">
                         <div class="courses-inline">
                             <div class="courses-name">{{ can_enroll_course }}</div>
-                            <div class="courses-classroom">Classroom: {{ can_enroll_course.Classroom }}</div>
+                            <div class="courses-classroom">Classroom: {{ can_enroll_course.classroom }}</div>
                         </div>
                     </div>
                     <div style="width: 657px; height: 1px; background: #EEEEEE"></div>
-            {% empty %}
-                <li> There is no course.</li>
-            {% endfor %}
-        </div>
+                {% empty %}
+                    <li> There is no course.</li>
+                {% endfor %}
+            </div>
 
-        <button id="grades-button" style="margin-top: 2%; width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
-                    color: white; font-family: Inter; font-size: 15px; font-style: normal; display: none">Grades</button>
+            <button id="grades-button" style="margin-top: 2%; width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 15px; font-style: normal; display: none">Grades
+            </button>
 
-        <script>
-            const courseDivs = document.querySelectorAll('.courses');
-            const gradesButton = document.getElementById('grades-button');
+            <script>
+                const courseDivs = document.querySelectorAll('.courses');
+                const gradesButton = document.getElementById('grades-button');
 
-            function clearActiveClasses() {
+                function clearActiveClasses() {
+                    courseDivs.forEach((div) => {
+                        div.classList.remove('active');
+                        div.querySelector('.courses-name').classList.remove('active');
+                        div.querySelector('.courses-classroom').classList.remove('active');
+                        div.querySelector('.courses-inline').classList.remove('active');
+                    });
+                }
+
                 courseDivs.forEach((div) => {
-                    div.classList.remove('active');
-                    div.querySelector('.courses-name').classList.remove('active');
-                    div.querySelector('.courses-classroom').classList.remove('active');
-                    div.querySelector('.courses-inline').classList.remove('active');
+                    div.addEventListener('click', () => {
+                        clearActiveClasses();
+                        div.classList.add('active');
+                        div.querySelector('.courses-name').classList.add('active');
+                        div.querySelector('.courses-classroom').classList.add('active');
+                        div.querySelector('.courses-inline').classList.add('active');
+
+                        gradesButton.style.display = 'block'; // Display the button
+                        gradesButton.onclick = () => { // Assign a function to handle button click event
+                            window.location.href = `/instructor/section/${div.getAttribute('data-id')}/grades/`;
+                        };
+                    });
                 });
-            }
-
-            courseDivs.forEach((div) => {
-                div.addEventListener('click', () => {
-                    clearActiveClasses();
-                    div.classList.add('active');
-                    div.querySelector('.courses-name').classList.add('active');
-                    div.querySelector('.courses-classroom').classList.add('active');
-                    div.querySelector('.courses-inline').classList.add('active');
-
-                    gradesButton.style.display = 'block'; // Display the button
-                    gradesButton.onclick = () => { // Assign a function to handle button click event
-                        window.location.href = `/instructor/section/${div.getAttribute('data-id')}/grades/`;
-                    };
-                });
-            });
-        </script>
+            </script>
 
 
-
-        <!--
+            <!--
                   <ul>
                     {% for can_enroll_course in active_page_obj %}
                       <li>
@@ -95,29 +98,32 @@
             <br>
             <br>
             <nav aria-label="Page navigation">
-              <ul class="pagination">
-                {% if active_page_obj.has_previous %}
-                  <li class="page-item">
-                    <a class="page-link" href="?active_page={{ active_page_obj.previous_page_number }}">Previous</a>
-                  </li>
-                {% endif %}
-                {% for i in active_page_obj.paginator.page_range %}
-                  <li class="page-item {% if active_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?active_page={{ i }}">{{ i }}</a>
-                  </li>
-                {% endfor %}
-                {% if active_page_obj.has_next %}
-                  <li class="page-item">
-                    <a class="page-link" href="?active_page={{ active_page_obj.next_page_number }}">Next</a>
-                  </li>
-                {% endif %}
-              </ul>
+                <ul class="pagination">
+                    {% if active_page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?active_page={{ active_page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    {% for i in active_page_obj.paginator.page_range %}
+                        <li class="page-item {% if active_page_obj.number == i %}active{% endif %}">
+                            <a class="page-link" href="?active_page={{ i }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if active_page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?active_page={{ active_page_obj.next_page_number }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
             </nav>
 
         </div>
 
         <div class="col-md-6" style="margin-top: 3%; padding-left: 3%">
-            <h3> Ciesza </h3>
+            <h3 style="margin-top: 0%; margin-left: 35%; color: #032D23; font-family: Playfair Display; font-size: 40px">
+                Ciesza </h3>
+            <hr>
             <ul style="margin-top: 5%"> <!-- padding inline start default 40px maybe 15px should be -->
 
                 {% for enrolled_course in forum_page_obj %}
@@ -129,14 +135,15 @@
                         <span style="color: #aaa">[{{ enrolled_course.semester }}]</span>
                         <input type="radio" name="enrolled_course" value="{{ enrolled_course.pk }}">
                     </label>
-                  <br>
+                    <br>
                 {% empty %}
                     <li>There is no course.</li>
                 {% endfor %}
 
             </ul>
             <button type="submit" id="enrolled-button" name="enroll" style="width: 55px; height: 28px; flex-shrink: 0; border-radius: 6px; background: #032D23;
-                color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Ciesza</button>
+                color: white; font-family: Inter; font-size: 15px; font-style: normal" disabled>Ciesza
+            </button>
 
             <script>
                 const enrolled_radio = document.querySelectorAll('input[name="enrolled_course"]');
@@ -160,23 +167,24 @@
             <br>
             <br>
             <nav aria-label="Page navigation">
-              <ul class="pagination">
-                {% if forum_page_obj.has_previous %}
-                  <li class="page-item">
-                    <a class="page-link" href="?forum_page={{ forum_page_obj.previous_page_number }}">Previous</a>
-                  </li>
-                {% endif %}
-                {% for i in forum_page_obj.paginator.page_range %}
-                  <li class="page-item {% if forum_page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?forum_page={{ i }}">{{ i }}</a>
-                  </li>
-                {% endfor %}
-                {% if forum_page_obj.has_next %}
-                  <li class="page-item">
-                    <a class="page-link" href="?forum_page={{ forum_page_obj.next_page_number }}">Next</a>
-                  </li>
-                {% endif %}
-              </ul>
+                <ul class="pagination">
+                    {% if forum_page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?forum_page={{ forum_page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    {% for i in forum_page_obj.paginator.page_range %}
+                        <li class="page-item {% if forum_page_obj.number == i %}active{% endif %}">
+                            <a class="page-link" href="?forum_page={{ i }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if forum_page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?forum_page={{ forum_page_obj.next_page_number }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
             </nav>
         </div>
     </div>

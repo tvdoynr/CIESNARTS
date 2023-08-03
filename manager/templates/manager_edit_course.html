@@ -15,15 +15,15 @@
                 {{ form.non_field_errors }}
 
                 <div class="fieldWrapper">
-                    {{ form.Classroom.errors }}
-                    <label for="{{ form.Classroom.id_for_label }}">Classroom:</label>
-                    {{ form.Classroom|add_class:"form-control" }}
+                    {{ form.classroom.errors }}
+                    <label for="{{ form.classroom.id_for_label }}">Classroom:</label>
+                    {{ form.classroom|add_class:"form-control" }}
                 </div>
                 <br>
                 <div class="fieldWrapper">
-                    {{ form.Instructor.errors }}
-                    <label for="{{ form.Instructor.id_for_label }}">Instructors :</label>
-                    {{ form.Instructor|add_class:"instructor_select2" }}
+                    {{ form.instructor.errors }}
+                    <label for="{{ form.instructor.id_for_label }}">Instructors :</label>
+                    {{ form.instructor|add_class:"instructor_select2" }}
                 </div>
 
             </div>
@@ -81,10 +81,26 @@
             options: {
                 scales: {
                     x: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        title: {
+                            display:true,
+                            text: "Students Number",
+                            color: "#ce2929",
+                            font: {
+                                size: 16,
+                            }
+                        }
                     },
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        title: {
+                            display:true,
+                            text: "Average Grade",
+                            color: "#ce2929",
+                            font: {
+                                size: 16,
+                            }
+                        }
                     }
                 },
                 plugins: {
