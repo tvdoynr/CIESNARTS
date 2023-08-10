@@ -91,8 +91,6 @@ class ForgotPasswordView(View):
 
         if form.is_valid():
             id = form.cleaned_data.get('id')
-            print('If there is an e-mail matching with provided Student-ID, we sent an e-mail about resetting '
-                  'your password.')
 
             if User.objects.filter(id=id):
                 user = User.objects.get(id=id)

@@ -13,6 +13,19 @@
                 <button type="submit" style="width: 114px; height: 29px; flex-shrink: 0; border-radius: 6px; background: #032D23;
                     color: white; font-family: Inter; font-size: 16px; font-style: normal">Add Semester</button>
             </form>
+
+            <form method="post" style="margin-top: 15%; margin-left: 12%">
+                {% csrf_token %}
+                <select name="delete_semester" class="delete_semester_select2">
+                    {% for semester in semesters %}
+                        <option value="{{ semester.id }}">{{ semester.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" style="width: 114px; height: 29px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+        color: white; font-family: Inter; font-size: 16px; font-style: normal">Delete Semester
+                </button>
+            </form>
+
         </div>
         <div class="col-md-6">
             <div class="card" style="margin-top: 4%">
@@ -27,6 +40,11 @@
             </div>
         </div>
 
+        <script>
+            $(document).ready(function() {
+                $('.delete_semester_select2').select2();
+            });
+        </script>
 
 
         {% if messages %}

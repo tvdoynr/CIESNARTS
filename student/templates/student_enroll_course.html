@@ -80,7 +80,6 @@
     <script>
         var bins = {{ bins|safe }};
 
-        // Open the modal and create the chart
         function openModal(index, bins, section_id, course_id, instructor_first_name, instructor_last_name) {
             var modal = document.getElementById("modal-" + index);
             modal.style.display = "block";
@@ -96,7 +95,7 @@
             modal.style.overflow = "auto";
             modal.style.backgroundColor = "rgba(0,0,0,0.4)";
             var ctx = document.getElementById('chart-' + index);
-            bins = JSON.parse(bins);  // Parse your dictionary
+            bins = JSON.parse(bins);
             new Chart(ctx, {
                 type: 'bar',
                 options:{
@@ -104,7 +103,7 @@
                     scales: {
                         x: {
                             ticks: {
-                                stepSize: 1,  // This ensures the x-axis uses integers
+                                stepSize: 1,
                                 beginAtZero: true
                             },
                             title: {
@@ -147,7 +146,6 @@
             });
         }
 
-        // Close the modal
         function closeModal(index) {
             var modal = document.getElementById("modal-" + index);
             modal.style.display = "none";

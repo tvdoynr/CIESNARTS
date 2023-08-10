@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_DB=cies_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=16gs1905
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    environment:
+      - DB_NAME=cies_db
+      - DB_USER=postgres
+      - DB_PASSWORD=16gs1905
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DJANGO_ALLOWED_HOSTS=web,localhost,127.0.0.1
+
+volumes:
+  postgres_data:

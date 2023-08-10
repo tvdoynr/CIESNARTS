@@ -9,7 +9,8 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.images import ImageFile
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.db.models import Avg
+from django.db.models import Avg, ProtectedError, Value, Count
+from django.db.models.functions import Concat
 from django.forms import formset_factory
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -20,22 +21,10 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 from announcements import get_announcements
+from .decorators import user_is_manager
 from .forms import ChangeEmailForm, ChangePasswordForm, CourseForm, SemesterForm, CreateUserForm, SectionForm, \
     ProfileForm
 from accounts.models import Course, Profile, Semester, Section, Grade, Image
-
-
-def user_is_manager(function):
-    def wrap(request, *args, **kwargs):
-        profile = Profile.objects.get(user=request.user)
-        if profile.user_type == 'manager':
-            return function(request, *args, **kwargs)
-        else:
-            raise PermissionDenied
-
-    wrap.__doc__ = function.__doc__
-    wrap.__name__ = function.__name__
-    return wrap
 
 
 @method_decorator(login_required, name="dispatch")
@@ -305,16 +294,38 @@ class SemesterCreateView(View):
     def get(self, request):
         form = SemesterForm()
         holidays_turkey = self.get_holidays()
+        semesters = Semester.objects.all()
 
         context = {
             'form': form,
             'holidays_turkey': holidays_turkey,
+            'semesters': semesters,
         }
-        print(holidays_turkey)
 
         return render(request, 'manager_semester.html', context)
 
     def post(self, request):
+        if "delete_semester" in request.POST:
+            semester_id = request.POST.get("delete_semester")
+            semester = get_object_or_404(Semester, id=semester_id)
+            try:
+                semester.delete()
+                messages.success(request, 'Semester has been deleted successfully.')
+                return redirect(reverse('CreateSemesterPage'))
+            except ProtectedError:
+                form = SemesterForm()
+                messages.success(request, 'Delete the semesters course first!!!')
+                holidays_turkey = self.get_holidays()
+                semesters = Semester.objects.all()
+
+                context = {
+                    'form': form,
+                    'holidays_turkey': holidays_turkey,
+                    'semesters': semesters,
+                }
+
+                return render(request, 'manager_semester.html', context)
+
         form = SemesterForm(request.POST)
         if form.is_valid():
             semester = form.save(commit=False)
@@ -322,7 +333,16 @@ class SemesterCreateView(View):
             messages.success(request, 'Semester has been created successfully.')
             return redirect(reverse('CreateSemesterPage'))
 
-        return render(request, 'manager_semester.html', {'form': form})
+        holidays_turkey = self.get_holidays()
+        semesters = Semester.objects.all()
+
+        context = {
+            'form': form,
+            'holidays_turkey': holidays_turkey,
+            'semesters': semesters,
+        }
+
+        return render(request, 'manager_semester.html', context)
 
 
 @method_decorator(login_required, name="dispatch")
@@ -338,31 +358,23 @@ class CourseEditView(View):
 
         current_date = timezone.now().date()
         past_semesters = Semester.objects.filter(finish_date__lt=current_date)
+
         past_courses = Course.objects.filter(course_id=course.course_id, semester__in=past_semesters)
-        print(course.course_id)
 
-        instructor_info = []
-        for past_course in past_courses:
-            past_sections = past_course.sections.all()
-            for section in past_sections:
-                if section.instructor:
-                    avg_grade = Grade.objects.filter(course=past_course,
-                                                     instructor=section.instructor).aggregate(Avg('value'))['value__avg']
-                    count = Grade.objects.filter(course=past_course,
-                                                 instructor=section.instructor).count()
+        grades = Grade.objects.filter(course__in=past_courses).annotate(
+            instructor_name=Concat('instructor__first_name', Value(' '), 'instructor__last_name'),
+        ).values('instructor_name').annotate(
+            avg_grade=Avg('value'),
+            count=Count('value')
+        ).order_by('-count')
 
-                    if avg_grade is None:
-                        avg_grade = 0
-
-                    instructor_info.append({
-                        'instructor': section.instructor.first_name + " " + section.instructor.last_name,
-                        'avg_grade': avg_grade,
-                        'count': count,
-                    })
-
-        instructor_info = sorted(instructor_info, key=lambda k: k['count'])
-
-        instructor_info = list({v['instructor']: v for v in instructor_info}.values())
+        instructors = []
+        avg_grades = []
+        counts = []
+        for grade in grades:
+            instructors.append(grade['instructor_name'])
+            avg_grades.append(grade['avg_grade'])
+            counts.append(grade['count'])
 
         initial_data_classroom = [{'classroom': section.classroom or None} for section in sections]
         initial_data_instructors = [{'instructor': section.instructor or None} for section in sections]
@@ -375,10 +387,6 @@ class CourseEditView(View):
             instructors = initial_data_instructors[i]['instructor']
             form.initial['instructor'] = instructors
 
-        instructors = [info['instructor'] for info in instructor_info]
-        avg_grades = [info['avg_grade'] for info in instructor_info]
-        counts = [info['count'] for info in instructor_info]
-
         context = {
             'course': course,
             'sections': sections,
@@ -387,8 +395,6 @@ class CourseEditView(View):
             'avg_grades': avg_grades,
             'counts': counts,
         }
-
-        print(instructor_info)
 
         return render(request, self.template_name, context)
 

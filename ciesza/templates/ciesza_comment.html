@@ -25,13 +25,23 @@
         <a style="color: #959a99; font-size: 16px">Commented {{ comment.timestamp|naturaltime }} by </a>
         <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=comment.author.user_id %}" style="color: #b0772c">
             {{ comment.author_name }} </a>
-        <p style="margin-top: 10px; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif">{{ comment.text }}</p>
+        <p style="margin-top: 10px; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif">{{ comment.text|safe }}</p>
 
     </div>
 </div>
 
     <button class="reply-btn" data-commentid="{{ comment.id }}" style="margin-top: 1%; width: 59px; height: 29px; flex-shrink: 0; border-radius: 6px; background: #032D23;
-                    color: white; font-family: Inter; font-size: 16px; font-style: normal">Reply</button>
+                    color: white; font-family: Inter; font-size: 16px; font-style: normal; display: inline-block">Reply</button>
+
+    {% if request.user.profile.nickname == comment.author_name and not comment.is_deleted %}
+        <form method="post" style="display: inline-block">
+            {% csrf_token %}
+            <input type="hidden" name="delete_comment" value="{{ comment.id }}">
+            <button type="submit" class="delete-btn" style="width: 145px; height: 29px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 16px; font-style: normal">Delete Comment
+            </button>
+        </form>
+    {% endif %}
 
     <div class="reply-form" id="reply-form-{{ comment.id }}" style="display:none;">
         <form method="post">

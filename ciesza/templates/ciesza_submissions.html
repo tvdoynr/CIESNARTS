@@ -147,7 +147,7 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             border-color: green">
 
-                <p style="margin-top: 5%; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif">{{ most_upvoted_comment.text }}</p>
+                <p style="margin-top: 5%; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif">{{ most_upvoted_comment.text|safe }}</p>
                 <a style="color: #959a99; font-size: 16px">Commented {{ most_upvoted_comment.timestamp|naturaltime }}
                     by </a>
                 <a href="{% url 'CieszaProfilePage' course_id=course_id user_id=most_upvoted_comment.author.user_id %}"

@@ -14,6 +14,7 @@ class Submission(models.Model):
     score = models.IntegerField(default=0)
     timestamp = models.DateTimeField(default=timezone.now)
     comment_count = models.IntegerField(default=0)
+    is_deleted = models.BooleanField(default=False)
 
 
 class Comment(models.Model):
@@ -27,6 +28,7 @@ class Comment(models.Model):
     text = RichTextField(max_length=2000)
     score = models.IntegerField(default=0)
     timestamp = models.DateTimeField(default=timezone.now)
+    is_deleted = models.BooleanField(default=False)
 
     def set_votes(self, user):
         self.up_voted = Vote.objects.filter(comment=self, author__user=user, up_vote=True).exists()

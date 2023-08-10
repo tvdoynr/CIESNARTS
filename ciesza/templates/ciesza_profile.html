@@ -114,16 +114,16 @@
                     'what_type': whatType,
                     'vote_type': voteType,
                     'what_user': whatUser,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // CSRF token for Django
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
                 success: function(response) {
-                    // Update the vote count on the page, depending on the response from the server
+
                     $(element).parent().parent().find('.score').html(response.new_score);
                     $('#author-score').html(response.author_score);
 
                     console.log(response.new_score)
 
-                    // Toggle the upvoted or downvoted class
+
                     if (voteType === "up_vote") {
                         $(element).toggleClass('upvoted');
                         $(element).parent().parent().find('.fa-chevron-down').removeClass('downvoted');

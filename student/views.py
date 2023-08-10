@@ -16,20 +16,8 @@ from django.views import View
 from announcements import get_announcements
 from django.db import transaction
 from accounts.models import Course, Section, Profile, Grade, Semester, Image
+from .decorators import user_is_student
 from .forms import ChangeEmailForm, ChangePasswordForm, ProfileForm
-
-
-def user_is_student(function):
-    def wrap(request, *args, **kwargs):
-        profile = Profile.objects.get(user=request.user)
-        if profile.user_type == 'student':
-            return function(request, *args, **kwargs)
-        else:
-            raise PermissionDenied
-
-    wrap.__doc__ = function.__doc__
-    wrap.__name__ = function.__name__
-    return wrap
 
 
 @method_decorator(login_required, name="dispatch")
@@ -156,7 +144,7 @@ class StudentCourseView(View):
         current_date = timezone.now().date()
         semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
 
-        active_courses = Course.objects.filter(is_active=True, semester=semester).order_by("course_id")
+        active_courses = Course.objects.filter(is_active=True, semester=semester).exclude(sections__students=student).order_by("course_id")
         enrolled_courses = Course.objects.filter(sections__students=student).annotate(
             is_current_semester=Case(
                 When(semester=semester, then=Value(True)),
@@ -165,7 +153,7 @@ class StudentCourseView(View):
             )
         ).order_by("-is_current_semester", "course_id")
 
-        active_courses = [course for course in active_courses if not course.is_student_enrolled(student)]
+        #active_courses = [course for course in active_courses if not course.is_student_enrolled(student)]
 
         paginator_enrolled_page = Paginator(enrolled_courses, 8)
         paginator_can_enroll_course = Paginator(active_courses, 5)
@@ -199,39 +187,25 @@ class StudentTakeCourseView(View):
             grades[section.id] = Grade.objects.filter(course__course_id=course.course_id,
                                                       instructor=section.instructor).exclude(course__semester=semester)
 
+        grade_to_letter = {
+            95: 0, 90: 1, 85: 2,
+            80: 3, 75: 4, 70: 5,
+            65: 6, 60: 7, 55: 8,
+            50: 9, 0: 10
+        }
+
         bins = {}
         for section_id, grade_values in grades.items():
             bins[section_id] = [0] * 11
             for grade_value in grade_values:
-                if grade_value.value >= 95:
-                    bins[section_id][0] += 1
-                elif grade_value.value >= 90:
-                    bins[section_id][1] += 1
-                elif grade_value.value >= 85:
-                    bins[section_id][2] += 1
-                elif grade_value.value >= 80:
-                    bins[section_id][3] += 1
-                elif grade_value.value >= 75:
-                    bins[section_id][4] += 1
-                elif grade_value.value >= 70:
-                    bins[section_id][5] += 1
-                elif grade_value.value >= 65:
-                    bins[section_id][6] += 1
-                elif grade_value.value >= 60:
-                    bins[section_id][7] += 1
-                elif grade_value.value >= 55:
-                    bins[section_id][8] += 1
-                elif grade_value.value >= 50:
-                    bins[section_id][9] += 1
-                else:
-                    bins[section_id][10] += 1
-
-        bins_list = [(k, v) for k, v in bins.items()]
+                for grade, index in grade_to_letter.items():
+                    if grade_value.value >= grade:
+                        bins[section_id][index] += 1
+                        break
 
         context = {
             'course': course,
             'sections': sections,
-            'bin_list': bins_list,
             'bins': json.dumps(bins),
         }
 
@@ -263,13 +237,51 @@ class StudentTakeCourseView(View):
 @method_decorator(login_required, name="dispatch")
 @method_decorator(user_is_student, name="dispatch")
 class StudentTranscriptView(View):
+    def convert_grades(self, request, grades, check_flag):
+        letter_to_gpa = {
+            'A1': 4.0, 'A2': 3.75, 'A3': 3.50,
+            'B1': 3.25, 'B2': 3.0, 'B3': 2.75,
+            'C1': 2.50, 'C2': 2.25, 'C3': 2.0,
+            'D': 1.75, 'F': 0.0
+        }
+
+        grade_to_letter = {
+            95: 'A1', 90: 'A2', 85: 'A3',
+            80: 'B1', 75: 'B2', 70: 'B3',
+            65: 'C1', 60: 'C2', 55: 'C3',
+            50: 'D', 0: 'F'
+        }
+
+        grades_credits = 0
+        grades_x_credits = 0
+
+        all_grade = []
+        letter_grade = 'F'
+        for grade in grades:
+            for key_grade, item_letter in grade_to_letter.items():
+                if grade.value >= key_grade:
+                    letter_grade = item_letter
+                    break
+            grades_credits += grade.course_credit
+            grades_x_credits += letter_to_gpa[letter_grade] * grade.course_credit
+            all_grade.append(letter_grade)
+
+        try:
+            gpa = round(grades_x_credits / grades_credits, 2)
+        except ZeroDivisionError:
+            gpa = 0
+
+        if check_flag:
+            return gpa
+
+        return [gpa, zip(grades, all_grade)]
+
     def get(self, request):
         student = Profile.objects.get(user=request.user)
 
         current_date = timezone.now().date()
         semester = Semester.objects.filter(start_date__lte=current_date, finish_date__gte=current_date).first()
 
-        print(semester)
         semesters = Semester.objects.all()
 
         semester_grades = Grade.objects.filter(transcript__student=student, course__semester=semester).annotate(
@@ -278,78 +290,11 @@ class StudentTranscriptView(View):
         total_grades = Grade.objects.filter(transcript__student=student).annotate(
             course_credit=F('course__course_credit'))
 
-        letter_to_gpa = {
-            'A1': 4.0, 'A2': 3.75, 'A3': 3.50,
-            'B1': 3.25, 'B2': 3.0, 'B3': 2.75,
-            'C1': 2.50, 'C2': 2.25, 'C3': 2.0,
-            'D': 1.75, 'F': 0.0
-        }
+        result = self.convert_grades(request, semester_grades, False)
+        semester_gpa = result[0]
+        semester_final_grades = result[1]
 
-        semester_credits = 0
-        semester_grades_x_credits = 0
-
-        all_grade = []
-        for grade in semester_grades:
-            letter_grade = "A1" if grade.value >= 95 else (
-                "A2" if grade.value >= 90 else (
-                    "A3" if grade.value >= 85 else (
-                        "B1" if grade.value >= 80 else (
-                            "B2" if grade.value >= 75 else (
-                                "B3" if grade.value >= 70 else (
-                                    "C1" if grade.value >= 65 else (
-                                        "C2" if grade.value >= 60 else (
-                                            "C3" if grade.value >= 55 else (
-                                                "D" if grade.value >= 50 else "F"
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-            semester_credits += grade.course_credit
-            semester_grades_x_credits += letter_to_gpa[letter_grade] * grade.course_credit
-            all_grade.append(letter_grade)
-
-        semester_final_grades = zip(semester_grades, all_grade)
-
-        try:
-            semester_gpa = round(semester_grades_x_credits / semester_credits, 2)
-        except ZeroDivisionError:
-            semester_gpa = 0
-
-        total_credits = 0
-        total_grades_x_credits = 0
-
-        for grade in total_grades:
-            letter_grade = "A1" if grade.value >= 95 else (
-                "A2" if grade.value >= 90 else (
-                    "A3" if grade.value >= 85 else (
-                        "B1" if grade.value >= 80 else (
-                            "B2" if grade.value >= 75 else (
-                                "B3" if grade.value >= 70 else (
-                                    "C1" if grade.value >= 65 else (
-                                        "C2" if grade.value >= 60 else (
-                                            "C3" if grade.value >= 55 else (
-                                                "D" if grade.value >= 50 else "F"
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-            total_credits += grade.course_credit
-            total_grades_x_credits += letter_to_gpa[letter_grade] * grade.course_credit
-
-        try:
-            total_gpa = round(total_grades_x_credits / total_credits, 2)
-        except ZeroDivisionError:
-            total_gpa = 0
+        total_gpa = self.convert_grades(request, total_grades, True)
 
         context = {
             'student': student,
@@ -371,47 +316,9 @@ class StudentTranscriptView(View):
         semester_grades = Grade.objects.filter(transcript__student=student, course__semester=semester).annotate(
             course_credit=F('course__course_credit')).order_by("course__course_id")
 
-        letter_to_gpa = {
-            'A1': 4.0, 'A2': 3.75, 'A3': 3.50,
-            'B1': 3.25, 'B2': 3.0, 'B3': 2.75,
-            'C1': 2.50, 'C2': 2.25, 'C3': 2.0,
-            'D': 1.75, 'F': 0.0
-        }
-
-        semester_credits = 0
-        semester_grades_x_credits = 0
-
-        all_grade = []
-        for grade in semester_grades:
-            letter_grade = "A1" if grade.value >= 95 else (
-                "A2" if grade.value >= 90 else (
-                    "A3" if grade.value >= 85 else (
-                        "B1" if grade.value >= 80 else (
-                            "B2" if grade.value >= 75 else (
-                                "B3" if grade.value >= 70 else (
-                                    "C1" if grade.value >= 65 else (
-                                        "C2" if grade.value >= 60 else (
-                                            "C3" if grade.value >= 55 else (
-                                                "D" if grade.value >= 50 else "F"
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-            semester_credits += grade.course_credit
-            semester_grades_x_credits += letter_to_gpa[letter_grade] * grade.course_credit
-            all_grade.append(letter_grade)
-
-        final_grades = zip(semester_grades, all_grade)
-
-        try:
-            semester_gpa = round(semester_grades_x_credits / semester_credits, 2)
-        except ZeroDivisionError:
-            semester_gpa = 0
+        result = self.convert_grades(request, semester_grades, False)
+        semester_gpa = result[0]
+        final_grades = result[1]
 
         grades_list = []
         for grade, letter_grade in final_grades:

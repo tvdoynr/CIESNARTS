@@ -38,7 +38,14 @@
         <a style="color: #959a99; font-size: 16px">Posted {{ submission.timestamp|naturaltime }} by</a>
         <a href="{% url 'CieszaProfilePage' course_id=submission.course_id user_id=submission.author.user_id %}" style="color: #b0772c"> {{ submission.author_name }} </a>
         <p style="margin-top: 20px; color: #1c1c1c; font-size: 16px; font-family: Noto Sans,Arial,sans-serif;">{{ submission.text|safe }}</p>
-
+        {% if request.user.profile.nickname == submission.author_name and not submission.is_deleted %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="delete" value="{{ submission.id }}">
+                <button type="submit" class="delete-btn" style="width: 145px; height: 29px; flex-shrink: 0; border-radius: 6px; background: #032D23;
+                    color: white; font-family: Inter; font-size: 16px; font-style: normal">Delete Submission</button>
+            </form>
+        {% endif %}
     </div>
 </div>
 <div style="padding-left: 7px">
@@ -61,6 +68,14 @@
 </body>
 
 <script>
+    $(document).ready(function(){
+        $(".delete-btn").click(function(e){
+            if (!confirm("Are you sure you want to delete?")) {
+                e.preventDefault();
+            }
+        });
+    });
+
     let replyButtons = document.getElementsByClassName('reply-btn');
     let currentVisibleForm = null;
 

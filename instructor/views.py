@@ -13,21 +13,9 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from accounts.models import Section, Profile, Transcript, Grade, Course, Semester, Image
 from announcements import get_announcements
+from .decorators import user_is_instructor
 from .forms import ChangeEmailForm, ChangePasswordForm, ProfileForm
 from django.db.models import Case, When, Value, BooleanField
-
-
-def user_is_instructor(function):
-    def wrap(request, *args, **kwargs):
-        profile = Profile.objects.get(user=request.user)
-        if profile.user_type == 'instructor':
-            return function(request, *args, **kwargs)
-        else:
-            raise PermissionDenied
-
-    wrap.__doc__ = function.__doc__
-    wrap.__name__ = function.__name__
-    return wrap
 
 
 @method_decorator(login_required, name="dispatch")

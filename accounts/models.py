@@ -16,7 +16,7 @@ class Profile(models.Model):
     )
     nickname = models.CharField(max_length=30, blank=True, null=True)
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='student')
-    profile_picture = models.ForeignKey(Image, on_delete=models.SET_NULL, null=True, default=6)
+    profile_picture = models.ForeignKey(Image, on_delete=models.SET_NULL, null=True, default=6)   # set_null yap
 
 
 class Semester(models.Model):
@@ -43,7 +43,7 @@ class Course(models.Model):
     course_name = models.CharField(max_length=100)
     description = models.TextField()
     course_credit = models.IntegerField()
-    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, null=True)
+    semester = models.ForeignKey(Semester, on_delete=models.PROTECT, null=True)   # protect -> if i want to delete semester i have to delete their courses
     is_active = models.BooleanField(default=False)
 
     def is_student_enrolled(self, student):
@@ -60,13 +60,9 @@ class Course(models.Model):
         super(Course, self).save(*args, **kwargs)
 
         if creating_new_course:
-            sections_list = [Section(course=self, NumberOfStudents=0, Classroom="") for _ in range(3)]
+            sections_list = [Section(course=self, number_of_students=0, classroom="") for _ in range(3)]
             Section.objects.bulk_create(sections_list)
-            '''
-            for i in range(1, 4):
-                section = Section(course=self, NumberOfStudents=0, Classroom="")
-                section.save()
-            '''
+
 
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='sections')

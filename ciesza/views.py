@@ -14,23 +14,9 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from accounts.models import Course, Profile, Semester, Section
+from ciesza.decorators import user_has_role
 from ciesza.forms import ChangeAuthorNameForm
 from ciesza.models import Submission, Comment, Vote
-
-
-def user_has_role(*roles):
-    def decorator(view_func):
-        @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
-            profile = Profile.objects.get(user=request.user)
-            if profile.user_type in roles:
-                return view_func(request, *args, **kwargs)
-            else:
-                raise PermissionDenied
-
-        return _wrapped_view
-
-    return decorator
 
 
 @method_decorator(login_required, name="dispatch")
@@ -234,7 +220,28 @@ class CommentsView(View):
         return render(request, 'ciesza_comments.html', context)
 
     def post(self, request, course_id, submission_id):
-        if "comment" in request.POST:
+        if "delete" in request.POST:                                                # for submission delete !change html
+            submission = get_object_or_404(Submission, id=submission_id)
+            if request.user.profile == submission.author:
+                submission.text = "<p><strong>[DELETED]</strong></p>"
+                submission.is_deleted = True
+                submission.save()
+                return redirect(reverse('CommentsPage', args=(course_id, submission_id)))
+            else:
+                return HttpResponseForbidden("You are not authorized to delete this submission.")
+
+        elif "delete_comment" in request.POST:
+            comment_id = request.POST.get("delete_comment")
+            comment = get_object_or_404(Comment, id=comment_id)
+            if request.user.profile == comment.author:
+                comment.text = "<p><strong>[DELETED]</strong></p>"
+                comment.is_deleted = True
+                comment.save()
+                return redirect(reverse('CommentsPage', args=(course_id, submission_id)))
+            else:
+                return HttpResponseForbidden("You are not authorized to delete this comment.")
+
+        elif "comment" in request.POST:
             text = request.POST.get('text')
             submission = Submission.objects.get(pk=submission_id)
             author = Profile.objects.get(user=request.user)
@@ -280,8 +287,6 @@ class CommentsView(View):
             author = Profile.objects.get(user_id=author_id)
 
             if submission_comment_type == "submission":
-                print(request.POST)
-                print("1")
                 submission = Submission.objects.get(pk=submission_comment_id)
 
                 vote, created = Vote.objects.get_or_create(submission_id=submission_comment_id, author=author)

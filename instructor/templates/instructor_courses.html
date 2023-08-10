@@ -49,8 +49,8 @@
                         div.querySelector('.courses-classroom').classList.add('active');
                         div.querySelector('.courses-inline').classList.add('active');
 
-                        gradesButton.style.display = 'block'; // Display the button
-                        gradesButton.onclick = () => { // Assign a function to handle button click event
+                        gradesButton.style.display = 'block';
+                        gradesButton.onclick = () => {
                             window.location.href = `/instructor/section/${div.getAttribute('data-id')}/grades/`;
                         };
                     });

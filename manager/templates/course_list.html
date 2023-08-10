@@ -43,7 +43,6 @@
               <form method="post" action="{% url 'course-edit' course.id %}">
                 <div class="modal-body">
                   {% csrf_token %}
-                  <!-- Replace `form` with an instance of CourseForm for this course -->
                   {{ form.as_p }}
                 </div>
                 <div class="modal-footer">
