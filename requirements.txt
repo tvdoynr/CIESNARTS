@@ -8,6 +8,7 @@ beautifulsoup4==4.12.2
 certifi==2023.7.22
 charset-normalizer==3.2.0
 crispy-bootstrap4==2022.1
+dj-database-url==2.0.0
 Django==4.2.2
 django-appconf==1.0.5
 django-bootstrap-v5==1.0.11
@@ -18,10 +19,12 @@ django-js-asset==2.1.0
 django-select2==8.1.2
 django-widget-tweaks==1.4.12
 frozenlist==1.4.0
+gunicorn==21.2.0
 holidays==0.29
 idna==3.4
 lxml==4.9.3
 multidict==6.0.4
+packaging==23.1
 Pillow==10.0.0
 psycopg2==2.9.6
 psycopg2-binary==2.9.6
@@ -33,4 +36,5 @@ sqlparse==0.4.4
 typing-extensions==4.6.3
 tzdata==2023.3
 urllib3==2.0.4
+whitenoise==6.5.0
 yarl==1.9.2
